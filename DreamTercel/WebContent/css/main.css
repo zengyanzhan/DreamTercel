@@ -1,0 +1,40 @@
+
+
+
+.nth-tabs .tab-content{
+		position:relative;
+		width:100%;
+		height:660px;
+		
+		/* border:solid blue 2px; */
+		
+	}
+	.nth-tabs .tab-pane{
+	position:absolute;
+		 width:100%;
+ 	height:98%;
+		left:-1px;
+		top:-2.1px;
+		
+		/* border:solid red 1px; */
+		
+	}
+	/*  选项卡的关闭菜单框定位   */
+	.nth-tabs .dropdown-menu{
+
+	position: absolute;
+	left:-120px;
+
+		
+	}
+	/*选项卡的背景颜色
+	.nth-tabs{
+		background-color:#b0cfec;
+	
+	}*/
+	选项卡的图标定位
+	#myTab .nth-tabs span{
+		margin-top:15px;
+		
+	}
+	

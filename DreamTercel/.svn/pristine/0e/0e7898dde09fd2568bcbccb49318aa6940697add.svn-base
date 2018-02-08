@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.stockControl.dao.CashArapStockDao">
+	<!-- 按条件查询和查询所有 -->
+	<select id="selectCashArapStocks" statementType="CALLABLE" parameterMap="selectCashArapStockParameterMap">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<!-- 输入参数 -->
+	<parameterMap type="map" id="selectCashArapStockParameterMap">
+		<parameter property="tableName"  jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="qualification" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="page" jdbcType="INTEGER" mode="INOUT"/>
+		<parameter property="rows" jdbcType="INTEGER" mode="INOUT"/>
+		<parameter property="pageTotal" jdbcType="INTEGER" mode="OUT"/>
+		<parameter property="rowsTotal" jdbcType="INTEGER"  mode="OUT"/>
+		<parameter property="orderColumn" jdbcType="VARCHAR"  mode="IN"/>
+		<parameter property="orderStyle" jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="cashArapStockList" jdbcType="CURSOR" mode="OUT" resultMap="selectCashArapStockResultMap"/>
+	</parameterMap>
+	<!-- 返回结果集 -->
+	<resultMap type="CashArapStock" id="selectCashArapStockResultMap">
+		<id column="cash_arap_stock_code" property="cashArapStockCode"/>
+		<result column="cash_account_code" property="cashAccountCode"/>
+		<result column="cash_account_name" property="cashAccountName"/>
+		<result column="fund_code" property="fundCode"/>
+		<result column="fund_name" property="fundName"/>
+		<result column="business_type" property="businessType"/>
+		<result column="total_money" property="totalMoney"/>
+		<result column="status" property="status"/>
+		<result column="business_date" property="businessDate"/>
+		<result column="period_flag" property="periodFlag"/>
+		<result column="cash_arap_stock_desc" property="cashArapStockDesc"/>
+	</resultMap>
+	<!-- 按条件删除（根据主键删除） -->
+	<delete id="deleteCashArapStock">
+		delete from cash_arap_stock where cash_arap_stock_code in (#{cashArapStockCode})
+	</delete>
+	<!-- 增加 -->
+	<insert id="insertCashArapStock" parameterType="CashArapStock">
+		insert into cash_arap_stock 
+			(cash_arap_stock_code,cash_account_code,fund_code,
+			business_type,total_money,status,business_date,
+			period_flag,cash_arap_stock_desc)
+		values
+			(#{cashArapStockCode},#{cashAccountCode},
+			#{fundCode},#{businessType},#{totalMoney},
+			#{status},#{businessDate},
+			#{periodFlag},#{cashArapStockDesc})
+	</insert>
+	<!-- 修改 -->
+	<update id="updateCashArapStock" parameterType="CashArapStock">
+		update cash_arap_stock set 
+			cash_account_code=#{cashAccountCode},
+			fund_code=#{fundCode},business_type=#{businessType},
+			total_money=#{totalMoney},status=#{status},
+			business_date=#{businessDate},
+			period_flag=#{periodFlag},
+			cash_arap_stock_desc=#{cashArapStockDesc}
+		where cash_arap_stock_code=#{cashArapStockCode}
+	</update>
+	<!-- 根据id查询 -->
+	<select id="selectCashArapStockById" resultMap="selectCashArapStockResultMap">
+		select * from 
+		(select cas.cash_arap_stock_code as cashArapStockCode,cas.cash_account_code as cashAccountCode,
+		f.fund_code as fundCode,f.fund_name as fundName, cas.business_type as businessType,cas.total_money as totalMoney,
+		cas.status as status,cas.business_date as businessDate,cas.period_flag as periodFlag,
+		cas.cash_arap_stock_desc as cashArapStockDesc from cash_arap_stock cas join
+		(select * from fund )f on cas.fund_code=f.fund_code)tab
+		 join (select * from cash_account) ca on tab.cashAccountCode=ca.cash_account_code 
+		 where tab.cashArapStockCode=#{cashArapStockCode}
+	</select>
+</mapper>

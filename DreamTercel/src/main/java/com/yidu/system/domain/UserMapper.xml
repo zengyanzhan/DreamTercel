@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace 指明SQL语句映射针对于实体对象 -->
+<mapper namespace="com.yidu.system.dao.UserDao">
+	<parameterMap type="java.util.Map" id="selectUserINMap">
+		<parameter property="tableName" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="qualification" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="page" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="rows" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="pageTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="rowsTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="orderColumn" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="orderStyle" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="cursor" mode="OUT" jdbcType="CURSOR"
+			resultMap="UserMap" />
+	</parameterMap>
+	<resultMap type="User" id="UserMap">
+		<id property="userCode" column="user_code" />
+		<result property="userName" column="user_name" />
+		<result property="userPwd" column="user_pwd" />
+		<result property="userCreateDate" column="user_create_date" />
+		<result property="roleCode" column="role_code" />
+		<result property="userFlag" column="user_flag" />
+		<result property="userDesc" column="user_desc" />
+	</resultMap>
+	<select id="selectUser" parameterMap="selectUserINMap"
+		statementType="CALLABLE">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<!-- 增加 -->
+	<insert id="insertUser" parameterType="User" statementType="CALLABLE">
+		insert into users
+		values(#{userCode},#{userName},#{userPwd},#{userCreateDate},#{roleCode},#{userFlag},#{userDesc})
+	</insert>
+
+	<!-- 删除 -->
+	<delete id="deleteUser" parameterType="User">
+		delete from users where
+		user_Code in (${userCode})
+	</delete>
+
+	<!-- 修改 -->
+	<update id="updateUser" parameterType="User">
+		update users set user_Name
+		=#{userName},user_Pwd=#{userPwd},user_Create_Date=#{userCreateDate},role_Code=#{roleCode},user_Flag=#{userFlag},
+		user_Desc=#{userDesc}
+		where user_Code=#{userCode}
+	</update>
+	
+	<!-- 通过编号一条查询数据 -->
+	<select id="selectOneByCode" parameterType="User" resultMap="UserMap">
+		select * from users where user_Code = #{userCode}
+	</select>
+	<!-- 通过编号查询一条数据 -->
+	<select id="checkLogin" parameterType="User" resultMap="UserMap" >
+		select * from users where user_name =#{userName} and user_pwd =#{userPwd} and user_Flag =1
+	
+	</select>
+
+</mapper>

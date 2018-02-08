@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace 指明SQL语句映射针对于实体对象 -->
+<mapper namespace="com.yidu.parameters.dao.FundDao">
+	
+	<parameterMap type="map" id="selectFundMapIn">
+		<parameter property="tableName" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="qualification" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="page" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="rows" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="pageTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="rowsTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="orderColumn" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="orderStyle" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="cursor" mode="OUT" jdbcType="CURSOR"
+			resultMap="FundMap" />
+	</parameterMap>
+	
+	<resultMap type="Fund" id="FundMap">
+		<id property="fundCode" column="fund_code" />
+		<result property="fundName" column="fund_name" />
+		<result property="cashAccountCode" column="cash_account_code" />
+		<result property="fundType" column="fund_type" />
+		<result property="trusteeName" column="trustee_name" />
+		<result property="managerName" column="manager_name" />
+		<result property="trusteeCode" column="trustee_code" />
+		<result property="managerCode" column="manager_code" />
+		<result property="initFundValue" column="init_fund_value" />
+		<result property="fundScale" column="fund_scale" />
+		<result property="manageRate" column="manage_rate" />
+		<result property="trusteeRate" column="trustee_rate" />
+		<result property="feePeriodDay" column="fee_period_day" />
+		<result property="establishDate" column="establish_date" />
+		<result property="fundDesc" column="fund_desc" />
+	</resultMap>
+	<!-- 分页查询 -->
+	<select id="selectFundRow" parameterMap="selectFundMapIn"
+		statementType="CALLABLE">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	
+	<!-- 新增 -->
+	<insert id="insertFundRow" parameterType="Fund">
+	    insert into fund values(#{fundCode},#{fundName},#{cashAccountCode},#{fundType},#{trusteeCode},#{managerCode},#{initFundValue},#{fundScale},#{manageRate},#{trusteeRate},#{feePeriodDay},#{establishDate},#{fundDesc})
+	</insert>
+	
+	<!-- 修改 -->
+	<update id="updateFund" parameterType="Fund">
+	    update fund set 
+	    fund_name=#{fundName},cash_account_code=#{cashAccountCode},
+	    fund_type=#{fundType},trustee_code=#{trusteeCode},manager_code=#{managerCode},
+	   init_fund_value=#{initFundValue},fund_scale=#{fundScale},manage_rate=#{manageRate},
+	   trustee_rate=#{trusteeRate},fee_period_day=#{feePeriodDay},
+	   establish_date=#{establishDate},fund_desc=#{fundDesc} Where fund_code=#{fundCode}
+	</update>
+	
+	<!-- 删除 -->
+	<delete id="deleteFund" parameterType="Fund">
+	    delete from fund where
+		fund_code in (${fundCode})
+	    
+	</delete>
+	
+	<!-- 通过一条查询数据 -->
+	<select id="selectFundByCode" parameterType="Fund" resultMap="FundMap">
+	    		select * from fund where fund_code = #{fundCode}
+	</select>
+	
+	<!-- 通过基金名称查询基金代码 -->
+	<select id="selectFundName" parameterType="String" resultType="String">
+	    select fund_name from fund where  fund_code = #{fundCode}
+	</select>
+</mapper>

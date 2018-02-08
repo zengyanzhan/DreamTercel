@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="com.yidu.parameters.dao.StockPlateDao">
+ 	<!-- 查询的sql语句 -->
+ 	<select id="selectStockPlates"  resultMap="selectStockPlatesMap" parameterType="com.yidu.parameters.domain.StockPlate">
+ 		select * from stock_block where stock_block_father_code='p' 
+ 			<if test='stockBlockCode!=null and stockBlockCode!="" '>
+ 				and stock_block_code =#{stockBlockCode}
+ 			</if>
+ 			<if test='stockBlockName!=null  and stockBlockName!="" '>
+ 					and stock_block_name =#{stockBlockName}
+ 			</if>
+ 		order by stock_block_code 
+ 	</select>
+ 	<!-- 通过父功能id查出子功能的sql语句 -->
+ 	<select id="selectStockPlatesById" resultMap="selectStockPlatesMap" parameterType="STRING"  >
+ 		select * from stock_block where stock_block_father_code=#{stockBlockFatherCode}
+ 	</select>
+	<resultMap type="stockPlate" id="selectStockPlatesMap">
+		<id column="stock_block_code" property="stockBlockCode"/>
+		<result column="stock_block_father_code" property="stockBlockFatherCode"/>
+		<result column="stock_block_name" property="stockBlockName"/>
+		<result column="stock_block_desc" property="stockBlockDesc"/>
+	</resultMap>
+		<!-- 自动增长列的sql语句 -->
+		<select id="autoId"  resultType="STRING"  parameterType="STRING">
+			select max(stock_block_code) from stock_block where 1=1
+			<if test="stockBlockCode!=null and stockBlockCode!=''" >
+				and stock_block_father_code=#{stockBlockCode}
+			</if>
+			<if  test="stockBlockCode==null  or stockBlockCode==''">
+				and stock_block_father_code='p'
+			</if>
+			
+		</select>
+		<!-- 增加的 方法 -->
+		<insert id="insertStockPlate" parameterType="StockPlate">
+			insert into stock_block values(#{stockBlockCode},#{stockBlockFatherCode},#{stockBlockName},#{stockBlockDesc})
+		</insert>
+		<!-- 根据ID 删除的sql语句 -->
+		<delete id="deleteStockPlateByIds" parameterType="STRING">
+			delete from stock_block where stock_block_code in #{stockBlockCode} or stock_block_father_code in #{stock_block_father_code}
+		</delete>
+		
+		<!-- 修改的sql语句 -->
+		<update id="updateStockPlate" parameterType="StockPlate" >
+			update stock_block set stock_block_father_code=#{stockBlockFatherCode},stock_block_name=#{stockBlockName},stock_block_desc=#{stockBlockDesc} where stock_block_code=#{stockBlockCode} 
+		</update>
+		<!-- 通过id查询的方法 -->
+		<select id="updateStockPlateByIds" parameterType="STRING"  resultMap="selectStockPlatesMap">
+			select * from stock_block where stock_block_code=#{stockBlockCodeId}
+		</select>
+	</mapper>

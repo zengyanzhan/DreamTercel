@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace 指明SQL语句映射针对于实体对象 该对象是库存管理的证券库存dao接口类 -->
+<mapper namespace="com.yidu.dayEnd.dao.AssetValuationDao">
+	<!--证券应收应付库存估值增值删 -->
+	<delete id="deleteSecurityStockByFunCode" parameterType="java.util.Map">
+		delete
+		from security_arap_stock
+		where fund_code=#{funCode} and
+		business_type=1
+		and
+		business_date=to_date(#{businessDate},'YYYY-MM-DD')
+	</delete>
+	<!-- 证券应收应付删除 -->
+	<delete id="deleteSecurityArapData" parameterType="java.util.Map">
+		delete from
+		security_arap where fund_code=#{funCode} and security_arap_type=1 and
+		business_date=to_date(#{businessDate},'YYYY-MM-DD')
+	</delete>
+	<!-- 证券应收应付库存估值增值查 -->
+	<select id="selectSecurityArapStockYSYFKuCun" parameterType="java.util.Map"
+		resultMap="securityArapStockYSYFKuCunMap">
+		select * from
+		security_arap_stock where fund_code=#{fundCode}
+		and
+		business_type=1 and
+		business_date=to_date(#{businessDate},'YYYY-MM-DD') and
+		cash_account_code=#{cashAccountId} and security_code=#{securityId}
+	</select>
+	<resultMap type="SecurityArapStock"
+		id="securityArapStockYSYFKuCunMap">
+		<id property="securityArapStockCode" column="security_arap_stock_code" />
+		<result property="cashAccountCode" column="cash_account_code " />
+		<result property="fundCode" column="fund_code" />
+		<result property="securityCode" column="security_code" />
+		<result property="businessType" column="business_type" />
+		<result property="totalMoney" column="total_money" />
+		<result property="periodFlag" column="period_flag" />
+		<result property="businessStatus" column="business_status" />
+		<result property="businessDate" column="business_date" />
+		<result property="securityArapStockDesc" column="security_arap_stock_desc" />
+	</resultMap>
+	<!-- 节假日查询 -->
+	<select id="selectHolidayList" resultType="HoildayXiao"
+		parameterType="string">
+		SELECT * FROM t_holiday where holidayDate
+		=to_date(#{0},'YYYY-MM-DD')
+	</select>
+	<!-- 证券库存查 -->
+	<select id="selectSecurityStockKuCun" resultMap="securityStockResultMap"
+		parameterType="java.util.Map">
+		select * from security_stock where
+		fund_code=#{fundCode,jdbcType=VARCHAR}
+		and
+		security_statistics_date=to_date(#{securityStatisticsDate},'YYYY-MM-DD')
+	</select>
+	<resultMap type="SecurityStock" id="securityStockResultMap">
+		<id property="code" column="security_stock_code" />
+		<result property="securityCode" column="security_code" />
+		<result property="fundCode" column="fund_code" />
+		<result property="accountCode" column="cash_account_code" />
+		<result property="securityName" column="security_name" />
+		<result property="securityType" column="security_type" />
+		<result property="securityUtilCost" column="security_util_cost" />
+		<result property="securityQuantity" column="security_quantity" />
+		<result property="totalMoney" column="security_total_money" />
+		<result property="datetimeInner" column="security_statistics_date" />
+	</resultMap>
+	<!-- 行情数据查 -->
+	<select id="selectHangQingCha" parameterType="java.util.Map"
+		resultMap="PriceDataMap">
+		select * from priceData where pd_securityCode=#{SecurityCode}
+		and
+		pd_enteringDate=to_date(#{businessDate},'YYYY-MM-DD')
+	</select>
+	<!-- 行情数据查 -->
+	<select id="selectHangQingChaAll" parameterType="string"
+		resultMap="PriceDataMap">
+		select * from priceData where pd_securityCode=#{securityId}
+	</select>
+	<resultMap type="PriceData" id="PriceDataMap">
+		<id property="priceDataCode" column="pd_priceDataCode" />
+		<result property="securityCode" column="pd_securityCode" />
+		<result property="enteringDate" column="pd_enteringDate" />
+		<result property="openingPrice" column="pd_openingPrice" />
+		<result property="closingPrice" column="pd_closingPrice" />
+		<result property="Desc" column="pd_Desc" />
+	</resultMap>
+	<!-- 清算款！！！！！！！！！！！！！！！ -->
+
+	<!-- 证券应收应付数据清算款删除 -->
+	<delete id="deleteSecurityArapYSYF" parameterType="java.util.Map">
+		delete from
+		security_arap where fund_code=#{fundCode} and security_arap_type=2 and
+		money_direction=1 and
+		business_date=to_date(#{businessDate},'YYYY-MM-DD')
+	</delete>
+	<!-- 现金应收应付数据删除 -->
+	<delete id="deleteCashArapXanJin" parameterType="java.util.Map">
+		delete from
+		cash_arap
+		where fund_code=#{fundCode} and cash_arap_type=4 and
+		money_direction=-1 and
+		business_date=to_date(#{businessDate},'YYYY-MM-DD')
+	</delete>
+	<!-- 根据ta统计日期进行查询申购、赎回数据 -->
+	<select id="selectTaTradeDataRiQi" parameterType="java.util.Map"
+		resultMap="selectTaTradDataParameterResultMap">
+		select * from ta_trad_data where
+		ta_trade_date=to_date(#{businessDate},'YYYY-MM-DD')
+		and
+		settle_date>to_date(#{businessDate},'YYYY-MM-DD') and
+		fund_code=#{fundCode}
+	</select>
+	<resultMap type="TaTradData" id="selectTaTradDataParameterResultMap">
+		<id column="ta_trad_data_code" property="taTradDataCode"/>
+		<result column="fund_code" property="fundCode"/>
+		<result column="ta_trad_quality" property="taTradQuality"/>
+		<result column="cash_account_code" property="cashAccountCode"/>
+		<result column="ta_total_money" property="taTotalMoney"/>
+		<result column="ta_real_money" property="taRealMoney"/>
+		<result column="ta_trade_date" property="taTradeDate"/>
+		<result column="settle_date" property="settleDate"/>
+		<result column="ta_unit_money" property="taUnitMoney"/>
+		<result column="fee" property="fee"/>
+		<result column="agencies" property="agencies"/>
+		<result column="ta_rade_type" property="taRadeType"/>
+		<result column="ta_trade_status" property="taTradeStatus"/>
+		<result column="ta_trad_data_desc" property="taTradDataDesc"/>
+	</resultMap>
+	<!-- 根据用户id得到现金账户id -->
+
+	<select id="selectCashAccountID" parameterType="string"
+		resultMap="selectCashAccountMap">
+		select * from cash_account where
+		cash_account_code=#{0}
+	</select>
+	<resultMap type="CashAccount" id="selectCashAccountMap">
+		<id column="cash_account_code" property="cashAccountCode"/>
+		<result column="cash_account_bank_card" property="cashAccountBankCard"/>
+		<result column="cash_account_name" property="cashAccountName"/>
+		<result column="cash_account_bank_name" property="cashAccountBankName"/>
+		<result column="cash_account_deposit_type" property="cashAccountDepositType"/>
+		<result column="cash_account_card_rate" property="cashAccountCardRate"/>
+		<result column="cash_account_interest_period" property="cashAccountInterestPeriod"/>
+		<result column="cash_account_start_time" property="cashAccountStartTime"/>
+		<result column="cash_account_end_time" property="cashAccountEndTime"/>
+		<result column="cash_account_desc" property="cashAccountDesc"/>
+	</resultMap>
+	<!-- 交易数据查询 -->
+	<select id="selectDealData" parameterType="java.util.Map"
+		resultMap="selectDealDataOutMap">
+		select * from deal_data where deal_date=to_date(#{businessDate},'YYYY-MM-DD') and
+		set_account_date>to_date(#{businessDate},'YYYY-MM-DD') and fund_code=#{fundCode}
+	</select>
+	<!-- 返回类型 -->
+	<resultMap type="DealData" id="selectDealDataOutMap">
+		<id column="deal_data_code" property="dealDataCode"/>
+		<result column="fund_code" property="fundCode"/>
+		<result column="security_code" property="securityCode"/>
+		<result column="deal_date" property="dealDate"/>
+		<result column="set_account_date" property="setAccountDate"/>
+		<result column="user_code" property="userCode"/>
+		<result column="broker_code" property="brokerCode"/>
+		<result column="trade_seat_code" property="tradeSeatCode"/>
+		<result column="deal_type" property="dealType"/>
+		<result column="deal_flag" property="dealFlag"/>
+		<result column="cash_account_code" property="cashAccountCode"/>
+		<result column="deal_price" property="dealPrice"/>
+		<result column="deal_quantity" property="dealQuantity"/>
+		<result column="deal_total_price" property="dealTotalPrice"/>
+		<result column="stamp_duty" property="stampDuty"/>
+		<result column="management_fee" property="managementFee"/>
+		<result column="transfer_fee" property="transferFee"/>
+		<result column="commission_fee" property="commissionFee"/>
+		<result column="brokerage_fee" property="brokerageFee"/>
+		<result column="real_collect_fee" property="realCollectFee"/>
+		<result column="security_interest" property="securityFnterest"/>
+		<result column="deal_status" property="dealStatus"/>
+		<result column="deal_data_desc" property="dealDataDesc"/>
+	</resultMap>
+	<!--增加证券应收应库存  -->
+	<insert id="insertSecurityArapStock" parameterType="SecurityArapStock">
+	    insert into security_arap_stock (security_arap_stock_code ,cash_account_code, 
+	    fund_code,security_code,business_type,total_money, period_flag,business_status,
+	     business_date,security_arap_stock_desc)
+	    values
+	    (#{securityArapStockCode},#{cashAccountCode},#{fundCode},#{securityCode},
+	    #{businessType},#{totalMoney},#{periodFlag},#{businessStatus},#{businessDate},
+	    #{securityArapStockDesc})
+	</insert>
+	<!-- 增加现金应收应付库存 -->
+	<insert id="insertCashArapStock" parameterType="CashArapStock">
+		insert into cash_arap_stock 
+			(cash_arap_stock_code,cash_account_code,fund_code,
+			business_type,total_money,status,business_date,
+			period_flag,cash_arap_stock_desc)
+		values
+			(#{cashArapStockCode},#{cashAccountCode},
+			#{fundCode},#{businessType},#{totalMoney},
+			#{status},#{businessDate},
+			#{periodFlag},#{cashArapStockDesc})
+	</insert>
+	<select id="selectAllFund" resultMap="FundMap">
+	    select * from fund
+	    
+	</select>
+<resultMap type="Fund" id="FundMap">
+		<id property="fundCode" column="fund_code" />
+		<result property="fundName" column="fund_name" />
+		<result property="cashAccountCode" column="cash_account_code" />
+		<result property="fundType" column="fund_type" />
+		<result property="trusteeCode" column="trustee_code" />
+		<result property="managerCode" column="manager_code" />
+		<result property="initFundValue" column="init_fund_value" />
+		<result property="fundScale" column="fund_scale" />
+		<result property="manageRate" column="manage_rate" />
+		<result property="trusteeRate" column="trustee_rate" />
+		<result property="feePeriodDay" column="fee_period_day" />
+		<result property="establishDate" column="establish_date" />
+		<result property="fundDesc" column="fund_desc" />
+	</resultMap>
+	<select id="selectNetValueChaAll" parameterType="string" resultMap="selectNetValueResultMap">
+	select * from net_value 
+	</select>
+	
+	<resultMap type="NetValue" id="selectNetValueResultMap">
+		<id column="net_value_code" property="treeFatherCode" />
+		<result column="fund_code" property="fundCode" />
+		<result column="project_name" property="projectName" />
+		<result column="project_code" property="projectCode" />
+		<result column="quantity" property="quantity" />
+		<result column="price" property="price" />
+		<result column="costing" property="costing" />
+		<result column="market_value" property="marketValue" />
+		<result column="statistic_date" property="statisticDate" />
+		<result column="value_add" property="valueAdd" />
+		<result column="tree_code" property="treeCode" />
+		<result column="tree_father_code" property="treeFatherCode" />
+	</resultMap>
+</mapper>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+  <mapper namespace="com.yidu.Android.dao.AndroidFundInvestBlockReportDao">
+  		<!-- 按条件查询和查询所有 -->
+	<select id="selectFundInvestBlocks" statementType="CALLABLE" parameterMap="selectFundInvestBlockMap">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+  
+  <parameterMap type="map"  id="selectFundInvestBlockMap">
+		<parameter property="tableName"  jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="qualification" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="page" jdbcType="INTEGER" mode="INOUT"/>
+		<parameter property="rows" jdbcType="INTEGER" mode="INOUT"/>
+		<parameter property="pageTotal" jdbcType="INTEGER" mode="OUT"/>
+		<parameter property="rowsTotal" jdbcType="INTEGER"  mode="OUT"/>
+		<parameter property="orderColumn" jdbcType="VARCHAR"  mode="IN"/>
+		<parameter property="orderStyle" jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="list" jdbcType="CURSOR" mode="OUT" resultMap="selectFundInvestBlockMap"/>
+	</parameterMap>
+  	<resultMap type="FundInvestBlockReport" id="selectFundInvestBlockMap">
+  		<result column="stockBlockName" property="stockBlockName"/>
+  		<result column="assecurityQuantity" property="assecurityQuantity"/>
+  		<result column="marketValue" property="marketValue" />
+  		<result column="projectCode" property="projectCode"/>
+  		<result column="fundCode" property="fundCode"/>
+  		<result column="statisticDate" property="statisticDate"/>
+  	</resultMap>
+  </mapper>

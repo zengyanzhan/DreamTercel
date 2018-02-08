@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yidu.dayEnd.dao.BondAccrualDao">
+	<resultMap type="BondAccrual" id="ArapResultMap">
+		<result property="bondCode" column="bond_code"/>
+		<result property="bondName" column="bond_name"/>
+		<result property="interestStarDate" column="interest_star_date"/>
+		<result property="interestEndDate" column="interest_end_date"/>
+		<result property="bondType" column="bond_type"/>
+		<result property="couponRate" column="coupon_rate"/>
+		<result property="bondInterest" column="bond_interest"/>
+		<result property="couponMoney" column="coupon_money"/>
+		<result property="paymentCount" column="payment_count"/>
+		<result property="bondDesc" column="bond_desc"/>
+		<result property="securityStockCode" column="security_stock_code"/>
+		<result property="securityCode" column="security_code"/>
+		<result property="fundCode" column="fund_code"/>
+		<result property="cashAccountCode" column="cash_account_code"/>
+		<result property="securityName" column="security_name"/>
+		<result property="securityType" column="security_type"/>
+		<result property="securityUtilCost" column="security_util_cost"/>
+		<result property="securityQuantity" column="security_quantity"/>
+		<result property="securityTotalMoney" column="security_total_money"/>
+		<result property="securityStatisticsDate" column="security_statistics_date"/>
+		<result property="securityPeriodFlag" column="security_period_flag"/>
+		<result property="securityStockDesc" column="security_stock_desc"/>
+	</resultMap>
+	<select id="selectBondAccrual" resultMap="ArapResultMap">
+	   select * from 	
+	   (select  g.*,rownum rn from
+	   (select * from (
+       (select * from bond)a join 
+       (select * from security_stock) b on a.bond_code =b.security_code )
+       where  b.security_type =2 ${sqlWhere}) g)e where e.rn>(#{page}-1)*#{rows} and e.rn&lt;=#{rows}*#{page} 
+	</select>
+	<insert id="insertBondAccrual" parameterType="SecurityArap">
+		insert into security_arap
+		values(#{securityArapCode},#{cashAccountCode},#{fundCode},#{securityCode},#{securityArapType},#{moneyDirection},#{money},#{businessDate},#{securityArapDesc})
+	</insert>
+	<select id="selectByIdBondAccrual"  parameterType="string" resultMap="ArapResultMap">
+	   select * from (
+       (select * from bond)a join 
+       (select * from security_stock)b on a.bond_code =b.security_code )where bond_code in (#{bondCode})
+	</select>
+	<select id="selectSize" resultType="int">
+	    select count(*) from (
+       (select * from bond)a join 
+       (select * from security_stock) b on a.bond_code =b.security_code)
+	</select>
+</mapper>

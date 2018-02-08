@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">      
+<!-- namespace 指明SQL语句映射针对于实体对象 -->
+<mapper namespace="com.yidu.transactionProcessing.dao.InterestsDao">
+	<!-- 参数map类型 -->
+	 	<parameterMap type="map" id="selectInterestsInMap">
+		<parameter property="tableName" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="qualification" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="page" mode="INOUT" jdbcType="INTEGER"/>
+		<parameter property="rows" mode="INOUT" jdbcType="INTEGER"/>
+		<parameter property="pageTotal" mode="OUT"  jdbcType="INTEGER"/>
+		<parameter property="rowsTotal" mode="OUT"  jdbcType="INTEGER"/>
+		<parameter property="orderColumn" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="orderStyle" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="cursor" mode="OUT" resultMap="selectInterestsOutMap" jdbcType="CURSOR"/>
+	</parameterMap>
+	<!-- //返回类型 -->
+	<resultMap type="Interests" id="selectInterestsOutMap">
+		<result column="totalmoney" property="totalmoney"/>
+		<result column="securityquantity" property="securityquantity"/>
+		<result column="securityName" property="securityName"/>
+		<result column="securityCode" property="securityCode"/>
+		<result column="eqDataCode" property="eqDataCode"/>
+		<result column="accountCode" property="accountCode"/>
+		<result column="tip" property="tip"/>
+		<result column="fundCode" property="fundCode"/>
+		<result column="exRights" property="exRights"/>
+		<result column="equityType" property="equityType"/>
+		<result column="stockDistribution" property="stockDistribution"/>
+		<result column="securityCost" property="securityCost"/>
+	</resultMap>
+	<select id="selectInterests" parameterMap="selectInterestsInMap" statementType="CALLABLE">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	
+	<select id="selectInterestsYi" parameterMap="selectInterestsInMap" statementType="CALLABLE">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<!-- <insert id="insertDealData" parameterType="DealData">
+		insert into deal_data (deal_data_code,fund_code,security_code,deal_date,set_account_date,user_code,broker_code,trade_seat_code,deal_type,deal_flag,cash_account_code,deal_price,deal_quantity,
+		deal_total_price,stamp_duty,management_fee,transfer_fee,commission_fee,brokerage_fee,real_collect_fee,security_interest,deal_status,deal_data_desc) 
+		values(#{dealDataCode},#{fundCode},#{securityCode},#{dealDate},#{setAccountDate},#{userCode},#{brokerCode},#{tradeSeatCode},#{dealType},#{dealFlag},#{cashAccountCode},#{dealPrice},#{dealQuantity},
+		#{dealTotalPrice},#{stampDuty},#{managementFee},#{transferFee},#{commissionFee},#{brokerageFee},#{realCollectFee},#{securityFnterest},#{dealStatus},#{dealDataDesc})
+	</insert>-->
+	<update id="updateInterests" parameterType="Map">
+		update equity_data set equity_data=#{tip} where equity_data_code=#{eqDataCode}
+	</update> 
+	
+	<update id="updateInterestsYi" parameterType="Map">
+		update equity_data set equity_data=#{tip} where equity_data_code=#{eqDataCode}
+	</update> 
+	
+	<!-- <select id="selectInterests" parameterType="Interests" resultType="Interests" statementType="CALLABLE">
+		select 	 nvl(sum(st.security_total_money),0)as totalmoney ,nvl(sum(st.security_quantity),0) as securityquantity , sc.security_name as securityName ,sc.security_code as securityCode,
+		ed.equity_data_code as eqDataCode , ed.cash_account_code as accountCode , ed.equity_data as tip ,ed.ex_day as exRights ,
+		ed.share_qut_bonus_scale as equityType,ed.send_stock_scale as stockDistribution 
+		from equity_data ed left  join security sc on ed.security_code=sc.security_code join  security_stock st on sc.security_code=st.security_code where 1=1  and ed.equity_data='未处理'
+		group by sc.security_name,sc.security_code,ed.equity_data_code,ed.equity_data_code,ed.cash_account_code,ed.equity_data,ed.ex_day ,ed.share_qut_bonus_scale,ed.send_stock_scale having 1=1
+		  <where>
+			<if test='#{exRights}!=null and ""#{exRights}'>
+				and ed.ex_day=#{exRights}
+			</if>
+			<if test='#{equityType}!=null and "".equals(#{equityType})'>
+				and ed.share_qut_bonus_scale=#{equityType}
+			</if>
+		</where> 
+	</select> -->
+	 
+	<!-- <select id="selectInterestsYi" parameterType="Interests" resultType="Interests" statementType="CALLABLE">
+		select nvl(sum(st.security_total_money),0)as totalmoney ,nvl(sum(st.security_quantity),0) as securityquantity , sc.security_name as securityName ,sc.security_code as securityCode,
+		ed.equity_data_code as eqDataCode , ed.cash_account_code as accountCode , ed.equity_data as tip ,ed.ex_day as exRights ,
+		ed.share_qut_bonus_scale as equityType,ed.send_stock_scale as stockDistribution 
+		from equity_data ed left  join security sc on ed.security_code=sc.security_code join  security_stock st on sc.security_code=st.security_code where 1=1  and ed.equity_data='处理'
+		group by sc.security_name,sc.security_code,ed.equity_data_code,ed.equity_data_code,ed.cash_account_code,ed.equity_data,ed.ex_day ,ed.share_qut_bonus_scale,ed.send_stock_scale
+	</select> -->
+	
+	<select id="selectInterestsEqDataCode" parameterType="String"  resultType="Interests" statementType="CALLABLE">
+		select 
+ 		nvl(sum(st.security_total_money),0)as totalmoney ,nvl(sum(st.security_quantity),0) as securityquantity , sc.security_name as securityName ,sc.security_code as securityCode,
+		ed.equity_data_code as eqDataCode , ed.cash_account_code as accountCode , ed.equity_data as tip ,ed.ex_day as exRights ,
+		ed.share_qut_bonus_scale as equityType,ed.send_stock_scale as stockDistribution ,st.fund_code as fundCode,st.security_util_cost as securityCost
+		from equity_data ed left  join security sc on ed.security_code=sc.security_code join  security_stock st on sc.security_code=st.security_code   
+		group by sc.security_name,sc.security_code,ed.equity_data_code,ed.cash_account_code,ed.equity_data,ed.ex_day ,ed.share_qut_bonus_scale,ed.send_stock_scale,st.fund_code,st.security_util_cost having 
+ 		1=1   and ed.equity_data_code = #{eqDataCode}
+	</select>
+</mapper>

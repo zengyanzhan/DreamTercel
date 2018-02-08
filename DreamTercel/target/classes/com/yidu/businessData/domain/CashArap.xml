@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.businessData.dao.CashArapDao">
+	<resultMap type="CashArap" id="ArapResultMap">
+		<result property="cashArapCode" column="cash_arap_code"/>
+		<result property="cashAccountCode" column="cash_account_code"/>
+		<result property="fundCode" column="fund_code"/>
+		<result property="cashArapType" column="cash_arap_type"/>
+		<result property="moneyDirection" column="money_direction"/>
+		<result property="money" column="money"/>
+		<result property="businessDate" column="business_date"/>
+		<result property="cashArapDesc" column="cash_arap_desc"/>
+	</resultMap>
+	<parameterMap type="java.util.Map" id="selectCashArapInMap">
+		<parameter property="tabName" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="qualification" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="page" mode="INOUT" jdbcType="INTEGER"/>
+		<parameter property="rows" mode="INOUT" jdbcType="INTEGER"/>
+		<parameter property="pageTotal" mode="OUT" jdbcType="INTEGER"/>
+		<parameter property="rowsTotal" mode="OUT" jdbcType="INTEGER"/>
+		<parameter property="orderColumn" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="orderStyle" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="cursor" jdbcType="CURSOR" mode="OUT"
+			resultMap="ArapResultMap"/>
+	</parameterMap>
+	<select id="selectCashArap" parameterMap="selectCashArapInMap"
+		statementType="CALLABLE">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<insert id="insertCashArap" parameterType="CashArap">
+		insert into cash_arap
+		values(#{cashArapCode},#{cashAccountCode},#{fundCode},#{cashArapType},#{moneyDirection},#{money},#{businessDate},#{cashArapDesc})
+	</insert>
+	<update id="updateCashArap" parameterType="CashArap">
+		update cash_arap set
+		cash_account_code=#{cashAccountCode},fund_code=#{fundCode},cash_arap_type=#{cashArapType},money_direction=#{moneyDirection},money=#{money},business_date=#{businessDate},cash_arap_desc=#{cashArapDesc} where cash_arap_code=#{cashArapCode}
+	</update>
+	<delete id="deleteCashArap" parameterType="String">
+		delete from cash_arap where cash_arap_code in(${cashArapCode})
+	</delete>
+	<select id="selectCashArapById" parameterType="String" resultType="CashArap">
+		select cash_arap_code as cashArapCode,cash_account_code as cashAccountCode,fund_code as fundCode,cash_arap_type as cashArapType,money_direction as moneyDirection,money as money,business_date as businessDate,cash_arap_desc as cashArapDesc from cash_arap  where cash_arap_code=#{cashArapCode}
+	</select>
+	<delete id="deleteSqlWhereCashArap" parameterType="string">
+		delete from cash_arap where cash_account_code in('${cashAccountCode}') and business_date in(to_date('${businessDate}','YYYY-MM-DD')) and fund_code in('${fundCode}') and cash_arap_type in('${cashArapType}')
+	</delete> 
+</mapper>

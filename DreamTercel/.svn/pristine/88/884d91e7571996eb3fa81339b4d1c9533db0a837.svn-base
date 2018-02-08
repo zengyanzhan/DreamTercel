@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 席位交易量统计 -->
+<mapper namespace="com.yidu.reportManagement.dao.SeatTradeReportDao">
+	<!-- 查询席位交易 -->
+	<resultMap type="com.yidu.reportManagement.domain.SeatTradeReport"
+		id="SeatTradeReportMap">
+		<id property="seatName" column="seatName" />
+		<result property="inputPlate" column="inputPlate" />
+		<result property="outputPlate" column="outputPlate" />
+		<result property="inputBond" column="inputBond" />
+		<result property="outputBond" column="outputBond" />
+		<result property="exchangeCode" column="exchangeCode" />
+		<result property="borkerCode" column="borkerCode"/>
+	</resultMap>
+	<select id="selectSeatTradeReport" parameterType="com.yidu.reportManagement.domain.ReportParams"
+		resultMap="SeatTradeReportMap">
+		<!-- 席位名称 交易数量 交易总金额 证券类型 交易标志 (关联交易席位设置 交易数据表 证券信息表) -->
+		select ts.seat_name seatName,nvl(sum(case when se.security_type!=2 and
+		dd.deal_flag>0 then to_number(nvl(dd.deal_total_price,0)) end),0) as
+		inputPlate ,
+		nvl(sum(case when se.security_type!=2 and dd.deal_flag!=1
+		then
+		to_number(nvl(dd.deal_total_price,0)) end),0) as outputPlate,
+		nvl(sum(case when se.security_type>1 and dd.deal_flag>0 then
+		to_number(nvl(dd.deal_total_price,0)) end),0) as inputBond,
+		nvl(sum(case
+		when se.security_type>1 and dd.deal_flag!=1 then
+		to_number(nvl(dd.deal_total_price,0)) end),0) as outputBond,
+		dd.fund_code,se.exchange_name exchangeCode from deal_data dd right
+		join trade_seat
+		ts on
+		dd.broker_code=ts.broker_code left join
+		security se
+		on
+		dd.security_code=se.security_code where
+		dd.fund_code='${fundCode}'
+		and
+		dd.deal_date between
+		to_date('${firstStrDate}','yyyy-mm-dd') and
+		to_date('${secondStrDate}','yyyy-mm-dd') and
+		se.exchange_name='${exchangeCode}'
+		and ts.broker_code='${borkerCode}'
+		group by
+		dd.fund_code,ts.seat_name,se.exchange_name
+	</select>
+	<!-- 查询券商交易 -->
+	<select id="selectBrokerReport" parameterType="com.yidu.reportManagement.domain.ReportParams"
+		resultMap="SeatTradeReportMap">
+		select
+		br.broker_code borkerCode,br.broker_name seatName,
+		to_number(nvl(sum(case
+		when
+		se.security_type!=2 and dd.deal_flag>0 then
+		(nvl(dd.deal_total_price,0)) end),0)) as inputPlate ,
+		to_number(nvl(sum(case
+		when se.security_type!=2 and dd.deal_flag!=1 then
+		(nvl(dd.deal_total_price,0)) end),0)) as outputPlate,
+		to_number(nvl(sum(case
+		when se.security_type>1 and dd.deal_flag>0 then
+		(nvl(dd.deal_total_price,0)) end),0)) as inputBond,
+		to_number(nvl(sum(case
+		when se.security_type>1 and dd.deal_flag!=1 then
+		to_number(nvl(dd.deal_total_price,0)) end),0)) as outputBond ,
+		dd.fund_code 
+		from deal_data dd
+		join broker
+		br on
+		dd.broker_code=br.broker_code
+		join trade_seat ts on
+		dd.broker_code=ts.broker_code
+		join security se on
+		dd.security_code=se.security_code
+		where dd.fund_code='${fundCode}'
+		and
+		dd.deal_date between to_date('${firstStrDate}','yyyy-mm-dd') and
+		to_date('${secondStrDate}','yyyy-mm-dd')
+		group by
+		dd.fund_code,br.broker_code,br.broker_name 
+	</select>
+	<!-- 交易所统计数据 -->
+	<select id="selectSeatTradeExchange" parameterType="com.yidu.reportManagement.domain.ReportParams"
+		resultMap="SeatTradeReportMap">
+		select nvl(sum(case when se.security_type!=2 and
+		dd.deal_flag>0 then
+		to_number(nvl(dd.deal_total_price,0)) end),0) as
+		inputPlate ,
+		nvl(sum(case when se.security_type!=2 and dd.deal_flag!=1
+		then
+		to_number(nvl(dd.deal_total_price,0)) end),0) as outputPlate,
+		nvl(sum(case when se.security_type>1 and dd.deal_flag>0 then
+		to_number(nvl(dd.deal_total_price,0)) end),0) as inputBond,
+		nvl(sum(case
+		when se.security_type>1 and dd.deal_flag!=1 then
+		to_number(nvl(dd.deal_total_price,0)) end),0) as outputBond,
+		dd.fund_code,se.exchange_name from deal_data dd left join security se
+		on dd.security_code=se.security_code where dd.fund_code='${fundCode}'
+		and
+		dd.deal_date between to_date('${firstStrDate}','yyyy-mm-dd') and
+		to_date('${secondStrDate}','yyyy-mm-dd')
+		and se.exchange_name='${exchangeCode}'
+		and dd.broker_code is not null  
+		group by
+		dd.fund_code,se.exchange_name
+	</select>
+	<!-- 统计两地数据合计 -->
+	<select id="selectTotalData" parameterType="com.yidu.reportManagement.domain.ReportParams"
+	resultMap="SeatTradeReportMap">
+	   select nvl(sum(case when se.security_type!=2 and
+		dd.deal_flag>0 then
+		to_number(nvl(dd.deal_total_price,0)) end),0) as
+		inputPlate ,
+		nvl(sum(case when se.security_type!=2 and dd.deal_flag!=1
+		then
+		to_number(nvl(dd.deal_total_price,0)) end),0) as outputPlate,
+		nvl(sum(case when se.security_type>1 and dd.deal_flag>0 then
+		to_number(nvl(dd.deal_total_price,0)) end),0) as inputBond,
+		nvl(sum(case
+		when se.security_type>1 and dd.deal_flag!=1 then
+		to_number(nvl(dd.deal_total_price,0)) end),0) as outputBond,
+		dd.fund_code from deal_data dd left join security se
+		on dd.security_code=se.security_code where dd.fund_code='${fundCode}'
+		and
+		dd.deal_date between to_date('${firstStrDate}','yyyy-mm-dd') and
+		to_date('${secondStrDate}','yyyy-mm-dd')
+		and dd.broker_code is not null 
+		group by
+		dd.fund_code
+	</select>
+</mapper>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace 指明SQL语句映射针对于实体对象 该对象是库存管理的证券库存dao接口类 -->
+<mapper namespace="com.yidu.dayEnd.dao.BondPayDao">
+	<resultMap type="BondPay" id="bondPayResultMap">
+		<!-- property 实体类属性名 column 表的字段名 -->
+		<result property="bondCode" column="bond_code" />
+		<result property="cashArapCode" column="cash_account_code" />
+		<result property="securityCode" column="security_code" />
+		<result property="fundCode" column="fund_code" />
+		<result property="accountCode" column="cash_account_code" />
+		<result property="bondName" column="bond_name" />
+		<result property="bondType" column="bond_type" />
+		<result property="direction" column="BUSINESS_STATUS" />
+		<result property="allMoney" column="total_money" />
+		<result property="businessDate" column="business_date" />
+		<result property="businessType" column="business_type" />
+		<result property="desc" column="desc" />
+	</resultMap>
+
+	<select id="selectBondPay" parameterType="map" resultMap="bondPayResultMap">
+		select * from security_arap_stock ss join bond b on
+		ss.security_code=b.bond_code join fund f on ss.fund_code=f.fund_code
+		where ss.business_type=3
+		<if test="businessDate!=null">
+			and ss.business_date=#{businessDate}
+		</if>
+		<if test="fundCode!=null">
+			and f.fund_code=#{fundCode}
+		</if>
+	</select>
+
+	<select id="selectBondPayCount" parameterType="BondPay"
+		resultType="Integer">
+		select count(*) from(
+		select * from security_arap_stock where business_date=#{businessDate}
+		and business_type=3 and fund_code=#{fundCode}) ss join bond b on
+		ss.security_code=b.bond_code join fund f on ss.fund_code=f.fund_code
+		where ss.business_type=3
+	</select>
+
+	<!-- 查询证券应收应收付表 -->
+	<select id="selectSecurityarapCode" parameterType="SecurityArap"
+		resultType="String">
+		select security_arap_code from security_arap where
+		security_code=#{bondCode} and business_date=#{businessDate}
+		and security_arap_type=3 and fund_code=#{fundCode} and money_direction=-1
+	</select>
+	
+	<!-- 删除证券 应收应付-->
+	<delete id="deleteSecurityaraps"  parameterType="SecurityArap">
+	delete from security_arap where security_arap_code=#{securityCode}
+	</delete>
+	<!-- 删除资金调拨 -->
+	<delete id="deleteMoneys" parameterType="MoneyAllot">
+delete from fund_allot
+		where business_code=#{businessCode} 
+	</delete>
+</mapper>

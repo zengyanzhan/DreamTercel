@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="com.yidu.reportManagement.dao.DealSetterReportDao">
+    <parameterMap type="map" id="DealSetterInMap">
+        <parameter property="fundCode" />
+        <parameter property="dealDate"/>
+    </parameterMap>
+	<!-- 返回类型 -->
+	<resultMap type="DealSettleAccounts" id="selectDealSetterOutMap">
+		<result column="security_code" property="securityCode"/>
+		<result column="SECURITY_name" property="securityName"/>
+		<result column="deal_price" property="dealPrice"/>
+		<result column="deal_type" property="dealType"/>
+		<result column="deal_quantity" property="dealQuantity"/>
+		<result column="deal_total_price" property="dealTotalPrice"/>
+		<result column="stamp_duty" property="stampDuty"/>
+		<result column="management_fee" property="managementFee"/>
+		<result column="transfer_fee" property="transferFee"/>
+		<result column="commission_fee" property="commissionFee"/>
+		<result column="brokerage_fee" property="brokerageFee"/>
+		<result column="real_collect_fee" property="realCollectFee"/>
+		<result column="security_interest" property="securityFnterest"/>
+		<result column="security_type" property="securityType"/>
+	</resultMap>
+    <select id="selectDealSettleAccounts" parameterMap="DealSetterInMap"  resultMap="selectDealSetterOutMap" statementType="CALLABLE">
+        select deal.security_code,bon.SECURITY_name,deal.deal_price,deal.deal_type,bon.security_type,
+				SUM(deal_quantity) as deal_quantity,SUM(deal_total_price) as deal_total_price,SUM(stamp_duty) stamp_duty,
+				SUM(management_fee) as management_fee,SUM(transfer_fee)as transfer_fee,sum(commission_fee) as commission_fee,sum(brokerage_fee) as brokerage_fee,
+				SUM(real_collect_fee) as real_collect_fee,SUM(security_interest) as security_interest from DEAL_DATA deal 
+				left join security bon on deal.security_code=bon.SECURITY_CODE 
+				where FUND_CODE=#{fundCode} and DEAL_DATE=to_date(#{dealDate},'yyyy-MM-dd') 
+				group by deal.deal_price,deal.deal_type,deal.security_code,bon.SECURITY_name,bon.security_type
+    </select>
+    <select id="selectCount" parameterMap="DealSetterInMap" resultType="INTEGER">
+        select count(*) from 
+        (select deal.security_code,bon.SECURITY_name,deal.deal_price,deal.deal_type,bon.security_type,
+				SUM(deal_quantity) as deal_quantity,SUM(deal_total_price) as deal_total_price,SUM(stamp_duty) stamp_duty,
+				SUM(management_fee) as management_fee,SUM(transfer_fee)as transfer_fee,sum(commission_fee) as commission_fee,sum(brokerage_fee) as brokerage_fee,
+				SUM(real_collect_fee) as real_collect_fee,SUM(security_interest) as security_interest from DEAL_DATA deal 
+				left join security bon on deal.security_code=bon.SECURITY_CODE 
+				where FUND_CODE=#{fundCode} and DEAL_DATE=to_date(#{dealDate},'yyyy-MM-dd') 
+				group by deal.deal_price,deal.deal_type,deal.security_code,bon.SECURITY_name,bon.security_type)
+    </select>
+</mapper>

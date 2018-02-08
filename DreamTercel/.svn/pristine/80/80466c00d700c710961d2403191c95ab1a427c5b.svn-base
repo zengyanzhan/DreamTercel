@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.reportManagement.dao.FundInvestGroupReportDao">
+	<!-- 按条件查询和查询所有 -->
+	<select id="selectFundInvestGroups" statementType="CALLABLE" parameterMap="selectFundInvestGroupParameterMap">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<parameterMap type="map" id="selectFundInvestGroupParameterMap">
+		<parameter property="tableName"  jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="qualification" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="page" jdbcType="INTEGER" mode="INOUT"/>
+		<parameter property="rows" jdbcType="INTEGER" mode="INOUT"/>
+		<parameter property="pageTotal" jdbcType="INTEGER" mode="OUT"/>
+		<parameter property="rowsTotal" jdbcType="INTEGER"  mode="OUT"/>
+		<parameter property="orderColumn" jdbcType="VARCHAR"  mode="IN"/>
+		<parameter property="orderStyle" jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="list" jdbcType="CURSOR" mode="OUT" resultMap="selectFundInvestGroupResultMap"/>
+	</parameterMap>
+	<resultMap type="FundInvestGroup" id="selectFundInvestGroupResultMap">
+		<result column="securityCode" property="securityCode"/>
+		<result column="securityName" property="securityName"/>
+		<result column="securityQuantity" property="securityQuantity"/>
+		<result column="securityUnitCost" property="securityUnitCost"/>
+		<result column="securityCosting" property="securityCosting"/>
+		<result column="price" property="price"/>
+		<result column="marketValue" property="marketValue"/>
+		<result column="projectName" property="projectName"/>
+		<result column="projectCode" property="projectCode"/>
+		<result column="fundCode" property="fundCode"/>
+		<result column="statisticDate" property="statisticDate"/>
+		<result column="investmentHeJi" property="investmentHeJi"/>
+		<result column="totalAssetsHeJi" property="totalAssetsHeJi"/>
+	</resultMap>
+	
+	<!-- 查询净值统计的资产净值、债券、资产合计 -->
+	<select id="selectNetValue" resultType="FundInvestGroup" parameterType="FundInvestGroup">
+	    select nvl(project_code,0) as projectCode from net_value 
+	    where 1=1 and project_name=#{projectName}  
+	    and  fund_code=#{fundCode} 
+	    and statistic_date=to_date(#{statisticDateWhere},'yyyy-MM-dd')
+    </select>
+    
+	<select id="selectSecurity" resultType="FundInvestGroup" parameterType="FundInvestGroup">
+	    select nvl(sum(security_total_money),0) as totalMoney 
+	    from  security_stock where 1=1 and 
+		security_type=#{securityType} and 
+		fund_code=#{fundCode} and 
+		security_statistics_date=to_date(#{statisticDateWhere},'yyyy-MM-dd')
+	</select>
+	
+	
+</mapper>

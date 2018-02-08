@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.Android.dao.NetAssetValueDao">
+	<!-- 按条件查询和查询所有净值统计表的数据 -->
+	<select id="selectNetAssetValue" parameterType="string"
+		resultMap="selectNetValueResultMap">
+		select * from net_value where project_name='资产净值' and fund_code=#{securityId}
+	</select>
+	<select id="selectUnitNet" parameterType="string"
+		resultMap="selectNetValueResultMap">
+		select * from net_value where project_name='单位资产净值' and fund_code=#{0}
+	</select>
+	
+	<resultMap type="NetValue" id="selectNetValueResultMap">
+		<id column="net_value_code" property="treeFatherCode" />
+		<result column="fund_code" property="fundCode" />
+		<result column="project_name" property="projectName" />
+		<result column="project_code" property="projectCode" />
+		<result column="quantity" property="quantity" />
+		<result column="price" property="price" />
+		<result column="costing" property="costing" />
+		<result column="market_value" property="marketValue" />
+		<result column="statistic_date" property="statisticDate" />
+		<result column="value_add" property="valueAdd" />
+		<result column="tree_code" property="treeCode" />
+		<result column="tree_father_code" property="treeFatherCode" />
+	</resultMap>
+	<resultMap type="StockTrading" id="selectStockTradingMap">
+		<id column="broker_name" property="tradeSeatCode" />
+		<result column="qssum" property="count" />
+	</resultMap>
+<select id="selectStockTrading" resultMap="selectStockTradingMap">
+select b.broker_name ,sum(dd.deal_total_price)as qssum from  (
+(select  *   from trade_seat)  ts   join  
+broker  b  on  ts.broker_code=b.broker_code  join  
+deal_data  dd  on  b.broker_code=dd.broker_code 
+)  group By  b.broker_name 
+
+</select>	
+<select id="selectStockTradingByDate" resultMap="selectStockTradingMap">
+select b.broker_name ,sum(dd.deal_total_price)as qssum from  (
+(select  *   from trade_seat)  ts   join  
+broker  b  on  ts.broker_code=b.broker_code  join  
+deal_data  dd  on  b.broker_code=dd.broker_code 
+) where  dd.deal_date between to_date(#{openDate},'yyyy-MM-dd') and to_date(#{endDate},'yyyy-MM-dd') group By  b.broker_name 
+
+
+</select>	
+<resultMap type="StockTrading" id="selectVolumeStatisticsMap">
+		<id column="trade_seat_code" property="tradeSeatCode" />
+		<result column="qssum" property="count" />
+	</resultMap>
+<select id="selectVolumeStatistics" resultMap="selectVolumeStatisticsMap">
+select ts.trade_seat_code ,sum(dd.deal_total_price) as qssum  from  (
+(select  *   from trade_seat)  ts   join  
+deal_data  dd  on  ts.trade_seat_code=dd.trade_seat_code 
+)  group By ts.trade_seat_code  
+</select>
+<select id="selectVolumeStatisticsByDate" resultMap="selectVolumeStatisticsMap">
+select ts.trade_seat_code ,sum(dd.deal_total_price) as qssum  from  (
+(select  *   from trade_seat)  ts   join  
+deal_data  dd  on  ts.trade_seat_code=dd.trade_seat_code 
+)   where  dd.deal_date between to_date(#{openDate},'yyyy-MM-dd') and to_date(#{endDate},'yyyy-MM-dd') group By ts.trade_seat_code 
+
+</select>
+
+<select id="selectStockAll" resultMap="selectSecuritysMap">
+select * from security where security_type=1
+</select>
+<resultMap type="Security" id="selectSecuritysMap">
+		<id column="security_code" property="securityCode"/>
+		<result column="security_name" property="securityName"/>
+		<result column="publish_date" property="publishDate"/>
+		<result column="delay_date" property="delayDate"/>
+		<result column="security_type" property="securityType"/>
+		<result column="exchange_name" property="exchangeName"/>
+		<result column="stock_plate_code" property="stockPlateCode"/>
+		<result column="security_desc" property="securityDesc"/>
+	</resultMap>
+	<!-- 行情数据查 -->
+	<select id="selectHangQingChaAll" parameterType="string"
+		resultMap="PriceDataMap">
+		select * from priceData where pd_securityCode=#{0}
+	</select>
+	<resultMap type="PriceData" id="PriceDataMap">
+		<id property="priceDataCode" column="pd_priceDataCode" />
+		<result property="securityCode" column="pd_securityCode" />
+		<result property="enteringDate" column="pd_enteringDate" />
+		<result property="openingPrice" column="pd_openingPrice" />
+		<result property="closingPrice" column="pd_closingPrice" />
+		<result property="Desc" column="pd_Desc" />
+	</resultMap>
+	<select id="selectSecurityCode" parameterType="string" resultMap="selectSecuritysMap">
+	select * from security where security_name=#{0} and  security_type=1
+	</select>
+		<!--查询净值  -->
+	<select id="selectNetValueChaAlls" resultMap="selectNetValueResultMap" parameterType="string">
+	select * from net_value where project_name='资产净值' 
+	</select>
+	<select id="selectNetValueChaAllsByDate" resultMap="selectNetValueResultMap" parameterType="string">
+	select * from net_value where project_name='资产净值' and statistic_date>=to_date(#{0},'yyyy-MM-dd') and statistic_date&lt;=to_date(#{1},'yyyy-MM-dd')
+
+	</select>
+	
+	<!--查询所有行情  -->
+<select id="selectAllMessage" resultMap="MessageMap">
+	select * from message 
+	</select>
+		<resultMap type="Message" id="MessageMap">
+		<id property="fundCode" column="fund_Code" />
+		<result property="fundName" column="fund_Name" />
+		<result property="messageTitle" column="message_Text" />
+		<result property="messageDate" column="message_Date" />
+		
+	</resultMap>
+	<select id="selectSecurityMarket" parameterType="string"  resultMap="securityMarketResultMap">
+	
+	  select * from 
+        (select s.security_code as securityCode, s.security_name as securityName,
+        ss.security_util_cost  as securityUtilCost, ss.security_quantity as securityQuantity,
+        nv.project_code as projectCode,nv.price as price ,nv.statistic_date as statisticDate
+        from security s join security_stock ss on s.security_code =ss.security_code 
+        join net_value nv on ss.fund_code =nv.fund_code and nv.project_name='资产净值')
+	</select>
+	<resultMap type="SecurityMarket" id="securityMarketResultMap">
+		<!-- property 实体类属性名 column 表的字段名 -->
+		<result property="securityCode" column="security_code" />
+		<result property="securityName" column="security_name" />
+		<result property="securityUtilCost" column="security_util_cost" />
+		<result property="securityQuantity" column="security_quantity" />
+		<result property="projectCode" column="project_code" />
+		<result property="price" column="price" />
+		<result property="statisticDate" column="statistic_date" />
+	</resultMap>
+	<select id="selectAllSecurity" resultMap="securityStockResultMap">
+	select * from security_stock
+	</select>
+	<resultMap type="SecurityStock" id="securityStockResultMap">
+		<id property="code" column="security_stock_code" />
+		<result property="securityCode" column="security_code" />
+		<result property="fundCode" column="fund_code" />
+		<result property="accountCode" column="cash_account_code" />
+		<result property="securityName" column="security_name" />
+		<result property="securityType" column="security_type" />
+		<result property="securityUtilCost" column="security_util_cost" />
+		<result property="securityQuantity" column="security_quantity" />
+		<result property="totalMoney" column="security_total_money" />
+		<result property="datetimeInner" column="security_statistics_date" />
+	</resultMap>
+	 <select id="selectAllSecurityByCode" resultMap="securityStockResultMap" parameterType="string">
+	select * from security_stock where security_code=#{0}
+	</select>
+	<select id="selectHangQingChaByDateAndId" resultMap="PriceDataMap" parameterType="string">
+	select * from priceData where pd_securityCode=#{0} and pd_enteringDate=to_date(#{1},'yy-MM-dd')
+	</select> 
+	 <select id="selectSecurityMarketByDate"  resultMap="securityStockResultMap"  parameterType="string">
+	select * from security_stock where security_code=#{0} and security_statistics_date &lt;= to_date(#{2},'yy-MM-dd') and security_statistics_date>=to_date(#{1},'yy-MM-dd')
+	</select>
+	<select id="selectHangQingByDate" parameterType="string" resultMap="PriceDataMap">
+	select * from priceData where pd_securityCode=#{0} and pd_enteringDate&lt;=to_date(#{2},'yy-MM-dd') and  pd_enteringDate>=to_date(#{1},'yy-MM-dd')
+	</select>
+	<select id="selectFundNameByCode" parameterType="string" resultMap="FundMap">
+	select * from fund where fund_code=#{0}
+	</select>
+	<resultMap type="Fund" id="FundMap">
+		<id property="fundCode" column="fund_code" />
+		<result property="fundName" column="fund_name" />
+		<result property="cashAccountCode" column="cash_account_code" />
+		<result property="fundType" column="fund_type" />
+		<result property="trusteeName" column="trustee_name" />
+		<result property="managerName" column="manager_name" />
+		<result property="trusteeCode" column="trustee_code" />
+		<result property="managerCode" column="manager_code" />
+		<result property="initFundValue" column="init_fund_value" />
+		<result property="fundScale" column="fund_scale" />
+		<result property="manageRate" column="manage_rate" />
+		<result property="trusteeRate" column="trustee_rate" />
+		<result property="feePeriodDay" column="fee_period_day" />
+		<result property="establishDate" column="establish_date" />
+		<result property="fundDesc" column="fund_desc" />
+	</resultMap>
+	<select id="selectAllSecurityByDate" parameterType="string" resultMap="securityStockResultMap">
+		select * from security_stock  where security_statistics_date &lt;= to_date(#{1},'yy-MM-dd') and security_statistics_date>=to_date(#{0},'yy-MM-dd')
+	
+	</select>
+	<select id="selectAllFund" resultMap="FundMap">
+	select * from fund
+	</select>
+	<select id="selectUserByNameAndPwd" resultMap="UserMap" parameterType="string">
+	select * from users where user_name=#{0} and user_pwd=#{1}
+	</select>
+	<resultMap type="User" id="UserMap">
+		<id property="userCode" column="user_code" />
+		<result property="userName" column="user_name" />
+		<result property="userPwd" column="user_pwd" />
+		<result property="userCreateDate" column="user_create_date" />
+		<result property="roleCode" column="role_code" />
+		<result property="userFlag" column="user_flag" />
+		<result property="userDesc" column="user_desc" />
+	</resultMap>
+</mapper>

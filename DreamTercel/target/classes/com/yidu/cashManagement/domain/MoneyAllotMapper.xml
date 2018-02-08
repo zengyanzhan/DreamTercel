@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.cashManagement.dao.MoneyAllotDao">
+	<resultMap type="MoneyAllot" id="allotResultMap">
+		<result property="code" column="fund_allot_code" />
+		<result property="fundCode" column="fund_code" />
+		<result property="money" column="fund_allot_money" />
+		<result property="accountCode" column="cash_account_code" />
+		<result property="direction" column="fund_allot_direction" />
+		<result property="date" column="fund_allot_Date" />
+		<result property="businessDate" column="business_date" />
+		<result property="businessCode" column="business_code" />
+		<result property="type" column="fund_allot_type" />
+		<result property="desc" column="fund_allot_desc" />
+	</resultMap>
+
+	<parameterMap type="java.util.Map" id="selectMoneyAllotInMap">
+		<parameter property="tabName" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="qualification" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="page" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="rows" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="pageTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="rowsTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="orderColumn" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="orderStyle" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="cursor" jdbcType="CURSOR" mode="OUT"
+			resultMap="allotResultMap" />
+	</parameterMap>
+
+	<select id="selectMoneyAllot" parameterMap="selectMoneyAllotInMap"
+		statementType="CALLABLE">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+
+	<insert id="insertMoneyAllot" parameterType="MoneyAllot">
+		insert into
+		fund_allot
+		values(#{code},#{fundCode},#{money},#{accountCode},#{direction},#{date},#{businessDate},#{businessCode},#{type},#{desc})
+	</insert>
+
+	<update id="updateMoneyAllot" parameterType="MoneyAllot">
+		update fund_allot
+		set
+		fund_code=#{fundCode},fund_allot_money=#{money},cash_account_code=#{accountCode},fund_allot_direction=#{direction},fund_allot_Date=#{date},business_date=#{businessDate},business_code=#{businessCode},fund_allot_type=#{type},fund_allot_desc=#{desc}
+		where fund_allot_code=#{code}
+	</update>
+
+	<delete id="deleteMoneyAllot" parameterType="MoneyAllot">
+		delete from
+		fund_allot where fund_allot_code in(${code})
+	</delete>
+
+	<select id="selectMoneyAllotByCode" parameterType="String"
+		resultMap="allotResultMap">
+		select * from fund_allot where fund_allot_code=#{code}
+	</select>
+
+	<delete id="deleteAllotCode" parameterType="MoneyAllot">
+		delete from fund_allot
+		where business_code=#{businessCode} 
+	</delete>
+	
+	
+</mapper>

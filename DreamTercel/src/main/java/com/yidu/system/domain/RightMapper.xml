@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace 指明SQL语句映射针对于实体对象 -->
+<mapper namespace="com.yidu.system.dao.RightDao">
+
+	<resultMap type="Right" id="RightMap">
+		<id property="rightCode" column="right_code" />
+		<result property="rightParentCode" column="right_parent_code" />
+		<result property="rightType" column="right_type" />
+		<result property="rightText" column="RIGHT_TEXT" />
+		<result property="rightUrl" column="right_url" />
+		<result property="rightIcon" column="right_icon" />
+		<result property="checkFlag" column="checkFlag" />
+		<result column="role_right_insert" property="insertFlag" />
+		<result column="role_right_update" property="updateFlag" />
+		<result column="role_right_delete" property="deleteFlag" />
+
+	</resultMap>
+	<!-- 通过用户名查询父功能 -->
+	<select id="selectSysRightByDocument" parameterMap="selectSysRightByFloderInMap"
+		resultMap="RightMap">
+		select
+		rt.*,urr.ROLE_RIGHT_INSERT,urr.ROLE_RIGHT_UPDATE,urr.ROLE_RIGHT_DELETE
+		,nvl(urr.RIGHT_CODE,0) as checkFlag from right rt left join (
+		select
+		rr.* from ROLE_RIGHT rr right join (
+		select r.* from users u ,role r
+		where u.ROLE_CODE = r.ROLE_CODE and
+		u.USER_Name =#{userName})ur
+		on
+		rr.ROLE_ID = ur.ROLE_CODE ) urr on urr.RIGHT_CODE =rt.RIGHT_CODE
+		where
+		rt.RIGHT_TYPE='Folder'
+	</select>
+
+	<!-- 通过用户名和父功能查询子功能 -->
+	<parameterMap type="map" id="selectSysRightByFloderInMap">
+		<parameter property="roleCode" jdbcType="VARCHAR" />
+		<parameter property="userName" jdbcType="VARCHAR" />
+		<parameter property="parentCode" jdbcType="VARCHAR" />
+	</parameterMap>
+	<select id="selectSysRightByFloder" parameterMap="selectSysRightByFloderInMap"
+		resultMap="RightMap">
+
+		select
+		rt.*,urr.ROLE_RIGHT_INSERT,urr.ROLE_RIGHT_UPDATE,urr.ROLE_RIGHT_DELETE
+		,nvl(urr.RIGHT_CODE,0) as checkFlag from right rt left join (
+		select *
+		from ROLE_RIGHT rr right join (
+		select r.* from users u ,role r where
+		u.ROLE_CODE = r.ROLE_CODE and
+		u.USER_name =#{userName})ur
+		on rr.ROLE_ID
+		= ur.ROLE_CODE ) urr on urr.RIGHT_CODE =rt.RIGHT_CODE
+		where
+		rt.RIGHT_TYPE='Document'
+		and rt.RIGHT_PARENT_CODE=#{parentCode}
+
+	</select>
+	<!-- 通过用户名查询父功能 -->
+	<select id="selectRightByRoleAndDocument" parameterMap="selectSysRightByFloderInMap"
+		resultMap="RightMap">
+		select
+		rt.*,urr.ROLE_RIGHT_INSERT,urr.ROLE_RIGHT_UPDATE,urr.ROLE_RIGHT_DELETE
+		,nvl(urr.RIGHT_CODE,0) as checkFlag from right rt left join (
+		select
+		rr.* from ROLE_RIGHT rr right join (
+		select r.* from role r where
+		r.ROLE_CODE =#{roleCode})ur
+		on rr.ROLE_ID = ur.ROLE_CODE ) urr on
+		urr.RIGHT_CODE =rt.RIGHT_CODE
+		where rt.RIGHT_TYPE='Folder'
+	</select>
+	<select id="selectRightRoleAndFloder" parameterMap="selectSysRightByFloderInMap"
+		resultMap="RightMap">
+
+		select
+		rt.*,urr.ROLE_RIGHT_INSERT,urr.ROLE_RIGHT_UPDATE,urr.ROLE_RIGHT_DELETE
+		,nvl(urr.RIGHT_CODE,0) as checkFlag from right rt left join (
+		select *
+		from ROLE_RIGHT rr right join (
+		select r.* from role r where
+		r.ROLE_CODE =#{roleCode})ur
+		on rr.ROLE_ID = ur.ROLE_CODE ) urr on
+		urr.RIGHT_CODE =rt.RIGHT_CODE
+		where rt.RIGHT_TYPE='Document'
+		and
+		rt.RIGHT_PARENT_CODE=#{parentCode}
+	</select>
+	<!-- 查询功能数据 -->
+	<parameterMap type="java.util.Map" id="rightMap">
+		<parameter property="tableName" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="qualification" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="page" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="rows" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="pageTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="rowsTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="orderColumn" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="orderStyle" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="cursor" mode="OUT" jdbcType="CURSOR"
+			resultMap="rightResultMap" />
+	</parameterMap>
+	<resultMap type="Right" id="rightResultMap">
+		<id property="rightCode" column="right_code" />
+		<result property="rightParentCode" column="right_parent_code" />
+		<result property="rightType" column="right_type" />
+		<result property="rightText" column="right_text" />
+		<result property="rightUrl" column="right_url" />
+		<result property="rightIcon" column="right_icon" />
+	</resultMap>
+	<select id="selectRight" parameterMap="rightMap" statementType="CALLABLE">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<insert id="insertRight" parameterType="Right">
+		insert into right
+		values(#{rightCode},#{rightParentCode},#{rightType},#{rightText},#{rightUrl},#{rightIcon})
+	</insert>
+	<update id="updateRight" parameterType="Right">
+		update right set
+		right_text=#{rightText},right_url=#{rightUrl},right_icon=#{rightIcon}
+		where right_code=#{rightCode}
+	</update>
+	<delete id="deleteRight" parameterType="Map" >
+		delete from right where 1=1
+		<if test="rightCodes!= null">
+			and right_code in (${rightCodes})
+		</if>
+	</delete>
+	<!-- 查询功能编号 -->
+	<select id="selectRightCodeByType" parameterType="Right"
+		resultType="String">
+		select max(right_code) from right where 1=1
+		<if test="rightType!=null">
+			and right_type=#{rightType}
+		</if>
+		<if test="rightParentCode!='one'">
+			and right_parent_code=#{rightParentCode}
+		</if>
+	</select>
+	<!-- 查询所有父功能id -->
+	<resultMap type="Right" id="rightParentResultMap">
+		<id property="rightCode" column="right_code" />
+		<result property="rightText" column="right_text" />
+	</resultMap>
+	<select id="selectRightParentCodeByType" parameterType="Map" resultMap="rightParentResultMap">
+		select * from
+		right where 1=1 
+		<if test="flag==null">
+		  and right_type='Folder'
+		</if>
+		<if test="flag!=null">
+		  and right_parent_code=${flag}
+		</if>
+	</select>
+</mapper>

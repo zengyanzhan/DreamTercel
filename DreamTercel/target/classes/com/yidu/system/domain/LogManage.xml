@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace	指明SQL语句映射针对于实体对象 -->
+<mapper namespace="com.yidu.system.dao.LogManageDao">
+		<!-- 配置调用分页查询存储过程的	参数的映射 -->
+	<parameterMap type="java.util.Map" id="selectLogManageMap">
+		<parameter property="tableName" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="qualification" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="page" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="rows" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="pageTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="rowsTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="orderColumn" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="orderStyle" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="cursor" mode="OUT" jdbcType="CURSOR"
+			resultMap="LogManageMap" />
+	</parameterMap>
+	<!-- 配置调用分页查询存储过程的	返回结果游标的映射 -->
+	<resultMap type="LogManage" id="LogManageMap">
+		<!-- property 实体类属性名	column 表的字段名 -->
+		<id property="dailyCode" column="daily_code"/>
+		<result property="userCode" column="user_code"/>
+		<result property="dailyTable" column="daily_table"/>
+		<result property="dailyType" column="daily_type"/>
+		<result property="dailyDate" column="daily_date"/>
+		<result property="dailyIp" column="daily_ip"/>
+		<result property="rightDesc" column="right_desc"/>
+	</resultMap>
+	<!-- 分页查询 -->
+	<select id="selectLogManage" parameterMap="selectLogManageMap"
+		statementType="CALLABLE">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<!-- 删除的方法 -->
+	<delete id="deleteLogManage" parameterType="LogManage">
+		delete from daily_record where
+		daily_code in (${dailyCode})
+	</delete>
+	<!-- 增加的方法 -->
+	<insert id="insertLogManage" parameterType="LogManage">
+		insert into  daily_record values
+		(#{dailyCode},#{userCode},#{dailyTable},#{dailyType},#{dailyDate},#{dailyIp},#{rightDesc})
+	</insert>
+	<!-- 修改 -->
+	<update id="updateLogManage" parameterType="LogManage">
+		update daily_record set user_code
+		=#{userCode},daily_table=#{dailyTable},daily_type=#{dailyType},daily_date=#{dailyDate},
+		daily_ip=#{dailyIp},right_desc=#{rightDesc}
+		where daily_code=#{dailyCode}
+	</update>
+		<!-- 通过编号一条查询数据 -->
+	<select id="selectOneByCodeLogManage" parameterType="LogManage" resultMap="LogManageMap">
+		select * from daily_record where daily_code = #{dailyCode}
+	</select>
+
+	
+</mapper>

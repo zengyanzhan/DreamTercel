@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<typeAliases>
+		<!--************* 系统管理 ********************************* -->
+
+		<!-- 日志 -->
+		<typeAlias type="com.yidu.system.domain.LogManage" alias="LogManage" />
+		<!-- 角色权限类的映射文件 -->
+		<typeAlias type="com.yidu.system.domain.RoleRight" alias="RoleRight" />
+
+		<!-- 功能实体类的别名 -->
+		<typeAlias type="com.yidu.system.domain.Right" alias="Right" />
+
+		<!-- 角色实体类的别名 -->
+		<typeAlias type="com.yidu.system.domain.Role" alias="Role" />
+
+		<!-- 用户实体类的别名 -->
+		<typeAlias type="com.yidu.system.domain.User" alias="User" />
+
+		<!--************* 业务参数 ********************************* -->
+
+
+		<!-- 交易席位 -->
+		<typeAlias type="com.yidu.parameters.domain.Seat" alias="Seat" />
+		<!-- 证券信息设置 -->
+		<typeAlias type="com.yidu.parameters.domain.Security" alias="Security" />
+		<!-- 债劵信息设置实体类的别名 -->
+		<typeAlias type="com.yidu.parameters.domain.Bond" alias="Bond" />
+
+		<!-- 券商信息实体类的别名 -->
+		<typeAlias type="com.yidu.parameters.domain.Broket" alias="Broket" />
+
+		<!-- 交易品种费率实体类的别名 -->
+		<typeAlias type="com.yidu.parameters.domain.ExchangeRate"
+			alias="ExchangeRate" />
+
+		<!-- 现金账户实体类的别名 -->
+		<typeAlias type="com.yidu.parameters.domain.CashAccount"
+			alias="CashAccount" />
+
+		<!-- 基金信息的实体类别名 -->
+		<typeAlias type="com.yidu.parameters.domain.Fund" alias="Fund" />
+
+
+		<!--股票板块信息设置实体类的别名 -->
+		<typeAlias type="com.yidu.parameters.domain.StockPlate"
+			alias="StockPlate" />
+		<!--************* 业务数据 ********************************* -->
+		<!-- 权益数据的实体类别名 -->
+
+		<typeAlias type="com.yidu.businessData.domain.EquityData"
+			alias="EquityData" />
+
+		<!-- 行情数据实体类的别名 -->
+		<typeAlias type="com.yidu.businessData.domain.PriceData"
+			alias="PriceData" />
+
+		<!-- 存款业务的实体类的别名 -->
+		<typeAlias type="com.yidu.businessData.domain.SaveingBusiness"
+			alias="SaveingBusiness" />
+
+		<!-- 现金应收应付实体类的别名 -->
+		<typeAlias type="com.yidu.businessData.domain.CashArap"
+			alias="CashArap" />
+
+		<!-- 证券应收应付实体类的别名 -->
+		<typeAlias type="com.yidu.businessData.domain.SecurityArap"
+			alias="SecurityArap" />
+		<!--************* 业务处理 ********************************* -->
+
+		<!-- 交易数据实体的别名 -->
+		<typeAlias type="com.yidu.transactionProcessing.domain.DealData"
+			alias="DealData" />
+		<!--************* 现金管理 ********************************* -->
+		<!-- 划款指令 -->
+		<typeAlias type="com.yidu.cashManagement.domain.AppropriationOrder"
+			alias="AppropriationOrder" />
+		<!-- 资金调拨实体类的别名 -->
+		<typeAlias type="com.yidu.cashManagement.domain.MoneyAllot"
+			alias="MoneyAllot" />
+
+		<!--************* TA管理 ******************* ************** -->
+
+		<!-- ta交易数据实体类的别名 -->
+		<typeAlias type="com.yidu.taManagement.domain.TaTradData"
+			alias="TaTradData" />
+		<typeAlias type="com.yidu.taManagement.domain.TaTradeSettle"
+			alias="TaTradeSettle" />
+		<!--************* 日终处理 ********************************* -->
+		<!-- 现金支付实体类别名 -->
+		<typeAlias type="com.yidu.dayEnd.domain.CashPay" alias="CashPay" />
+		<!-- 库存统计实体类的别名 -->
+		<typeAlias type="com.yidu.dayEnd.domain.Stock" alias="Stock" />
+		<!-- 现金计提实体类的别名 -->
+		<typeAlias type="com.yidu.dayEnd.domain.CashAccrual" alias="CashAccrual" />
+		<!-- 债券支付实体类的别名 -->
+		<typeAlias type="com.yidu.dayEnd.domain.BondPay" alias="BondPay" />
+		<!-- 债券计提实体类的别名 -->
+		<typeAlias type="com.yidu.dayEnd.domain.BondAccrual" alias="BondAccrual" />
+		<!-- 两费实体类的别名 -->
+		<typeAlias type="com.yidu.dayEnd.domain.TwoCost" alias="TwoCost" />
+		<!-- 净值统计表的实体类的别名 -->
+		<typeAlias type="com.yidu.dayEnd.domain.NetValue" alias="NetValue" />
+		<!--************* 库存管理 ********************************* -->
+		<!-- 现金应收应付库存的实体类的别名 -->
+		<typeAlias type="com.yidu.stockControl.domain.CashArapStock"
+			alias="CashArapStock" />
+
+		<!-- 现金库存的实体类的别名 -->
+		<typeAlias type="com.yidu.stockControl.domain.CashStock"
+			alias="CashStock" />
+
+		<!--证券库存实体类的别名 -->
+		<typeAlias type="com.yidu.stockControl.domain.SecurityStock"
+			alias="SecurityStock" />
+
+		<!-- TA库存信息的实体类的别名 -->
+		<typeAlias type="com.yidu.stockControl.domain.TaStock"
+			alias="TaStock" />
+
+		<!-- 证券应收应付库存 -->
+		<typeAlias type="com.yidu.stockControl.domain.SecurityArapStock"
+			alias="SecurityArapStock" />
+		<!--*************工具模块 ********************************* -->
+		<!-- 工具类的别名 -->
+		<typeAlias type="com.yidu.util.domain.UtilDomian" alias="UtilDomian" />
+		<!-- 管理人的别名 -->
+		<typeAlias type="com.yidu.parameters.domain.Manager" alias="Manager" />
+		<!-- 托管人的别名 -->
+		<typeAlias type="com.yidu.parameters.domain.Trustee" alias="Trustee" />
+		<!--权益处理 -->
+		<typeAlias type="com.yidu.transactionProcessing.domain.Interests"
+			alias="Interests" />
+		<typeAlias type="com.yidu.system.domain.HoildayXiao" alias="HoildayXiao" />
+		<!-- 报表 -->
+		<typeAlias type="com.yidu.reportManagement.domain.FundInvestGroup"
+			alias="FundInvestGroup" />
+		<typeAlias type="com.yidu.reportManagement.domain.StockFluctuate"
+			alias="StockFluctuate" />
+		<typeAlias type="com.yidu.reportManagement.domain.DealSettleAccounts"
+			alias="DealSettleAccounts" />
+		<typeAlias type="com.yidu.reportManagement.domain.FundInvestBlockReport"
+			alias="FundInvestBlockReport" />
+			
+		<typeAlias type="com.yidu.reportManagement.domain.SecurityMarket"
+			alias="SecurityMarket" />
+			
+		<typeAlias type="com.yidu.reportManagement.domain.StockeQuity" alias="StockeQuity"/>
+		<typeAlias type="com.yidu.reportManagement.domain.DifferenceReport" alias="DifferenceReport"/>
+		<!-- 安卓 -->
+		<typeAlias type="com.yidu.Android.domain.Message" alias="Message" />
+		
+		
+		
+		<typeAlias type="com.yidu.Android.domain.NetValueEntity" alias="NetValueEntity" />
+			<typeAlias type="com.yidu.Android.domain.StockTrading" alias="StockTrading" />
+	</typeAliases>
+	<!-- -->
+	<mappers>
+		<!--************* 系统管理 ******************* -->
+
+		<!-- 功能实体类与功能表的语句映射 -->
+		<mapper resource="com/yidu/system/domain/RightMapper.xml" />
+		<!-- 角色实体类与角色表的语句映射 -->
+		<mapper resource="com/yidu/system/domain/RoleMapper.xml" />
+		<!-- 用户实体类与用户表的语句映射 -->
+		<mapper resource="com/yidu/system/domain/UserMapper.xml" />
+		<!-- 角色权限类与角色权限表的语句映射 -->
+		<mapper resource="com/yidu/system/domain/RoleRightMapper.xml" />
+
+
+		<!-- 债券信息设置的语句映射 -->
+		<mapper resource="com/yidu/parameters/domain/broketMapper.xml" />
+		<!--************* 业务处理 ******************* -->
+		<!--************* 现金管理 ******************* -->
+		<!-- 划款指令实体类与划款指令的语句映射 -->
+		<mapper resource="com/yidu/cashManagement/domain/AppropriationOrder.xml" />
+		<!-- 资金调拨的实体类与资金调拨表的语句映射 -->
+		<mapper resource="com/yidu/cashManagement/domain/MoneyAllotMapper.xml" />
+
+		<!--************* TA管理 ******************* -->
+		<!--************* 日终处理 ******************* -->
+		<!-- 现金支付实体类与现金支付表的语句映射 -->
+		<mapper resource="com/yidu/dayEnd/domain/CashPayMapper.xml" />
+		<!-- 库存统计 -->
+		<mapper resource="com/yidu/dayEnd/domain/StockMapper.xml" />
+
+		<!-- 债券支付实体类与债券支付表的语句映射 -->
+		<mapper resource="com/yidu/dayEnd/domain/BondPayMapper.xml" />
+
+
+		<!--************* 库存管理 ******************* -->
+		<!-- 证券库存 -->
+		<mapper resource="com/yidu/stockControl/domain/SecurityStockMapper.xml" />
+		<!-- 现金库存 -->
+		<mapper resource="com/yidu/stockControl/domain/CashStockMapper.xml" />
+
+		<mapper resource="com/yidu/transactionProcessing/domain/DealDataMapper.xml" />
+
+		<mapper resource="com/yidu/businessData/domain/EquityDataMapper.xml" />
+		<mapper resource="com/yidu/parameters/domain/BondMapper.xml" />
+		<mapper resource="com/yidu/stockControl/domain/CashArapStockMapper.xml" />
+		<mapper resource="com/yidu/stockControl/domain/TaStockMapper.xml" />
+		<mapper resource="com/yidu/util/domain/AutoBianHao.xml" />
+
+		<mapper resource="com/yidu/businessData/domain/CashArap.xml" />
+
+		<mapper resource="com/yidu/parameters/domain/ExchangeRateMapper.xml" />
+		<mapper resource="com/yidu/parameters/domain/CashAccountMapper.xml" />
+		<mapper resource="com/yidu/parameters/domain/FundMapper.xml" />
+		<mapper resource="com/yidu/taManagement/domain/TaTradDataMapper.xml" />
+		<mapper resource="com/yidu/dayEnd/domain/AssetValuation.xml" />
+		<mapper resource="com/yidu/businessData/domain/SecurityArap.xml" />
+		<mapper resource="com/yidu/dayEnd/domain/NetValueMapper.xml" />
+		<mapper resource="com/yidu/businessData/domain/PriceDateMapper.xml" />
+		<mapper resource="com/yidu/parameters/domain/StockPlateMapper.xml" />
+		<!-- 证券信息 设置映射 -->
+		<mapper resource="com/yidu/parameters/domain/SecurityMapper.xml" />
+		<!--交易席位映射 -->
+		<mapper resource="com/yidu/parameters/domain/SeatMapper.xml" />
+		<!-- 托管人映射 -->
+		<mapper resource="com/yidu/parameters/domain/TrusteeMapper.xml" />
+		<!-- 现金计提映射 -->
+		<mapper resource="com/yidu/dayEnd/domain/CashAccrual.xml" />
+		<!-- 两费映射 -->
+		<mapper resource="com/yidu/dayEnd/domain/TwoCost.xml" />
+		<!-- 债券计提映射 -->
+		<mapper resource="com/yidu/dayEnd/domain/BondAccrual.xml" />
+		<!-- 权益处理映射 -->
+		<mapper resource="com/yidu/transactionProcessing/domain/InterestsMapper.xml" />
+		<!-- 管理人的映射 -->
+		<mapper resource="com/yidu/parameters/domain/ManagerMapper.xml" />
+		<mapper resource="com/yidu/taManagement/domain/TaTradeSettleMapper.xml" />
+		<!-- 证券应收应付库存 -->
+		<mapper resource="com/yidu/stockControl/domain/SecurityArapStockMapper.xml" />
+		<mapper resource="com/yidu/system/domain/HolidayXiaoMapper.xml" />
+		<!--陈佳龙 -->
+		<mapper resource="com/yidu/businessData/domain/SaveingBusinessMapper.xml" />
+		<!-- 日志 -->
+		<mapper resource="com/yidu/system/domain/LogManage.xml" />
+		<!-- 表报 -->
+		<mapper resource="com/yidu/reportManagement/domain/FundInvestGroupMapper.xml" />
+		<mapper resource="com/yidu/reportManagement/domain/SeatTradeReportMapper.xml" />
+		<mapper resource="com/yidu/reportManagement/domain/CashPositionMapper.xml"/>
+		<mapper
+			resource="com/yidu/reportManagement/domain/SeatDealDetailReportMapper.xml" />
+		<mapper resource="com/yidu/reportManagement/domain/StockFluctuate.xml" />
+		<mapper
+			resource="com/yidu/reportManagement/domain/DealSettleAccountsMapper.xml" />
+		<mapper resource="com/yidu/reportManagement/domain/FundInvestBlock.xml"/>	
+		<mapper resource="com/yidu/reportManagement/domain/SecurityMarket.xml"/>
+		<mapper resource="com/yidu/reportManagement/domain/StockeQuityMapper.xml"/>
+		<mapper resource="com/yidu/reportManagement/domain/DifferenceReport.xml"/>
+		<!-- 安卓 -->
+		<mapper resource="com/yidu/Android/domain/AndroidFundInvestBlock.xml"/>
+		<mapper resource="com/yidu/Android/domain/NetValueEntityMapper.xml" />
+		
+	</mappers>
+
+</configuration>

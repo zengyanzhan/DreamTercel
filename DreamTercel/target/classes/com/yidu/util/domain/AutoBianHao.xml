@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace 指明SQL语句映射针对于实体对象 -->
+<mapper namespace="com.yidu.util.dao.UtilDao">
+	
+	<!--   -->
+	<select id="selectCodeByMaXCode" parameterType="UtilDomian" resultType="string">
+	 	select max(${cardField}) from  ${tableName}    
+	</select>
+	<select id="selectCodeByDateAndMaxCode" parameterType="UtilDomian" resultType="String">
+		
+	select max(${cardField}) from  ${tableName}  where ${dateField}  = to_date('${strDate}','yyyy-MM-dd')
+	
+	</select>
+	
+	<select id="getNetValueCode" parameterType="UtilDomian" resultType="String">
+		select Max(tree_code) from net_value where tree_father_code =#{treeFatherCode} and statistic_date = #{statisticDate}    
+	
+	</select>
+</mapper>

@@ -1,0 +1,513 @@
+package com.yidu.dayEnd.service.impl;
+
+import java.sql.Date;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.yidu.cashManagement.domain.MoneyAllot;
+import com.yidu.dayEnd.dao.StockDao;
+import com.yidu.dayEnd.domain.DateParams;
+import com.yidu.dayEnd.domain.Stock;
+import com.yidu.dayEnd.service.StockService;
+import com.yidu.parameters.dao.SecurityDao;
+import com.yidu.parameters.domain.Fund;
+import com.yidu.parameters.domain.Security;
+import com.yidu.stockControl.dao.CashArapStockDao;
+import com.yidu.stockControl.dao.CashStockDao;
+import com.yidu.stockControl.dao.SecurityStockDao;
+import com.yidu.stockControl.dao.TaStockDao;
+import com.yidu.stockControl.domain.CashArapStock;
+import com.yidu.stockControl.domain.CashStock;
+import com.yidu.stockControl.domain.SecurityArapStock;
+import com.yidu.stockControl.domain.SecurityStock;
+import com.yidu.stockControl.domain.TaStock;
+import com.yidu.transactionProcessing.domain.DealData;
+import com.yidu.util.AllUtil;
+import com.yidu.util.service.AutoBianService;
+
+/**
+ * 库存统计实现类
+ * @author ZengYanZhan
+ * @date 2017年11月15日
+ * @time 下午4:06:40
+ */
+@Service
+public class StockServiceImpl implements StockService{
+	@Autowired
+	private StockDao stockDao;//自动装配库存统计dao层接口类
+	@Autowired
+	private AutoBianService autoBianService;//自动装配自动生成编号服务类
+	@Autowired
+	private SecurityStockDao securityStockDao;//自动装配证券库存
+	@Autowired
+	private CashStockDao cashStockDao;//自动装配现金库存
+	@Autowired
+	private TaStockDao taStockDao;//自动封装TA库存
+	@Autowired
+	private CashArapStockDao cashArapStockDao;//自动装配现金应收应付库存
+	@Autowired
+	private SecurityDao securityDao;//装配证券信息
+
+
+	@Override
+	public Map<String, Object> selectStock(Stock stock) {
+		// TODO Auto-generated method stub
+		HashMap<String,Object> map=new HashMap<String,Object>(); //创建一个Map，用来装参数
+		map.put("tableName","right"); //表名
+		map.put("qualification", " and right_parent_code='L07'"); //条件
+		map.put("rows", stock.getRows()); //每页总行数
+		map.put("page", stock.getPage()); //第几页
+		map.put("orderColumn", "right_code"); //排序的列字段
+		map.put("orderStyle", stock.getSortOrder()); //排序的方式
+		stockDao.selectStock(map);//加载查询数据到map集合
+		return map;
+	}
+
+	@Override
+	public Stock securityStockStatistics(Stock stock) throws Exception {
+		// TODO Auto-generated method stub
+		Fund fund=stockDao.selectFund(stock.getFundCode());//得到基金成立日期 通过fundCode查询该基金的信息
+		Date todayStatisticsDate=AllUtil.getDate(stock.getStatisticsDate());//得到今天的统计日期
+		Date fundEstablishDate=fund.getEstablishDate();//得到基金成立日期
+		Date yesterdayDate=AllUtil.getDate(stock.getStatisticsDate(), -1);//得到昨日日期
+		SecurityStock seStock=new SecurityStock();//创建一个证券库存实体类 用来存贮一个实体类
+		Stock stockEntity=new Stock();//实体类
+		/**
+		 * 统计日期小于基金成立日期  
+		 * 提示统计日期必须在基金成立日期这天或者之后
+		 */
+		if(todayStatisticsDate.getTime()<fundEstablishDate.getTime()){
+			stockEntity.setFlag(2);//标志说明 2不可以统计 
+			return stockEntity;
+		}
+		/**
+		 * 统计日期大于成立日期 没有昨日库存 
+		 * 提示请统计昨日库存
+		 */
+		//查询昨日库存
+		List<SecurityStock> list=stockDao.selectSecurityStock(new DateParams(1,null,null,null,stock.getFundCode(),yesterdayDate,todayStatisticsDate));
+		if(todayStatisticsDate.getTime()>fundEstablishDate.getTime() && stock.getFlag()==2){
+			if(list.size()<=0){
+				stock.setFlag(3);//提示请统计昨日库存 或者查询昨日库存
+				return stock;
+			}
+		}
+		/**
+		 * 查询统计之后的证券库存
+		 * 查询今日该证券买入总金额 以及卖出总金额()
+		 */
+		int count=0;//记录统计的数据行数
+		List<DealData> inputDealDataList=stockDao.selectTradeData(new DateParams(null,null,null,1,fund.getFundCode(),yesterdayDate,todayStatisticsDate));
+		//当统计之后的数据没有时，表示没有昨日库存以及今日发生额 提示统计成功
+		if(inputDealDataList.size()==0){
+			stockEntity.setStatisticsDate(stock.getStatisticsDate());//统计日期
+			stockEntity.setOperator(stock.getOperator());//得到操作者
+			stockEntity.setFundCode(fund.getFundCode());//得到基金代码
+			stockEntity.setFundName(fund.getFundName());//得到基金名称
+			stockEntity.setStockNum(count);//统计条数为0
+			stockEntity.setFlag(1);//如果返回的条数为0 提示统计成功
+			return stockEntity;
+		}
+		//删除今日库存  
+		stockDao.deleteSecurityStock(new DateParams(null, null, null, null, fund.getFundCode(), null, todayStatisticsDate));
+		//遍历买入集合
+		for(DealData dealData:inputDealDataList){
+			//如果交易数据的总金额不为零 增加数据到证券库存
+			if(dealData.getDealTotalPrice()!=0){
+				//计算单位成本  
+				seStock.setSecurityUtilCost(dealData.getDealTotalPrice()/dealData.getDealQuantity());
+				//计算证券库存总数量
+				seStock.setSecurityQuantity(dealData.getDealQuantity());
+				//计算证券库存总金额
+				seStock.setTotalMoney(dealData.getDealTotalPrice());
+				//设置不是期初数据
+				seStock.setPeriodFlag(2);
+				//得到证券Code
+				seStock.setSecurityCode(dealData.getSecurityCode());
+				//根据证券code查询该证券的所有信息
+				Security secrityEntity=securityDao.selectSecurityByIds(dealData.getSecurityCode());
+				//得到证券名称
+				seStock.setSecurityName(secrityEntity.getSecurityName());
+				//设置证券类型为股票
+				seStock.setSecurityType(secrityEntity.getSecurityType());
+				//得到现金账户Code
+				seStock.setAccountCode(dealData.getCashAccountCode());
+				//得到基金code
+				seStock.setFundCode(dealData.getFundCode());
+				//得到统计日期
+				seStock.setDatetimeInner(todayStatisticsDate);
+				//生成证券库存编号
+				seStock.setCode(autoBianService.getAutoBianhao("security_stock", "ZJKC", "security_stock_code", "security_statistics_date",todayStatisticsDate));
+				seStock.setSecurityDesc("");
+				//调用增加证券库存的方法
+				//增加成功一行就记录一行数据
+				count+=securityStockDao.insertSecurityStock(seStock);
+			}  
+		}
+		//设置返回的stock实体类 基金编号
+		stockEntity.setStatisticsDate(stock.getStatisticsDate());//统计日期
+		stockEntity.setOperator(stock.getOperator());//得到操作者
+		stockEntity.setFundCode(fund.getFundCode());//得到基金代码
+		stockEntity.setFundName(fund.getFundName());//得到基金名称
+		//设置记录数
+		stockEntity.setStockNum(count);
+		//设置状态 统计完成
+		stockEntity.setStockType(1);
+		return stockEntity;
+	}
+
+	@Override
+	public Stock cashStockStatistics(Stock stock) throws Exception {
+		// TODO Auto-generated method stub
+		Fund fund=stockDao.selectFund(stock.getFundCode());//得到基金成立日期 通过fundCode查询该基金的信息
+		Date todayStatisticsDate=AllUtil.getDate(stock.getStatisticsDate());//得到今天的统计日期
+		Date fundEstablishDate=fund.getEstablishDate();//得到基金成立日期
+		Date yesterdayDate=AllUtil.getDate(stock.getStatisticsDate(), -1);//得到昨日日期
+		CashStock cashStockEntity= new CashStock();//创建现金库存实体类
+		Stock stockEntity=new Stock();//实体类
+		/**
+		 * 统计日期小于基金成立日期  
+		 * 提示统计日期必须在基金成立日期这天或者之后
+		 */
+		if(todayStatisticsDate.getTime()<fundEstablishDate.getTime()){
+			stockEntity.setFlag(2);//标志说明 2不可以统计 
+			return stockEntity;
+		}
+		/**
+		 * 统计日期大于成立日期  没有昨日库存 
+		 * 提示请统计昨日库存
+		 */
+		//查询昨日库存
+		List<CashStock> list=stockDao.selectCashStock(new DateParams(null, null, null, null, stock.getFundCode(), yesterdayDate, null));
+		if(todayStatisticsDate.getTime()>fundEstablishDate.getTime() && stock.getFlag()==2){
+			if(list.size()<=0){
+				stockEntity.setFlag(3);//请统计昨日库存
+				return stockEntity;
+			}
+		}
+		/**
+		 * 统计现金库存的数据
+		 */
+		int count=0;//记录统计数据条数
+		//查询现金库存统计之后的数据
+		List<MoneyAllot> moneyAllotList=stockDao.selectMoneyAllot(new DateParams(null, null, null,null, stock.getFundCode(), yesterdayDate, todayStatisticsDate));
+		//当统计之后的数据没有时，表示没有昨日库存以及今日发生额 提示统计成功
+		if(moneyAllotList.size()==0){
+			//设置返回的stock实体类 基金编号
+			stockEntity.setStatisticsDate(stock.getStatisticsDate());//统计日期
+			stockEntity.setOperator(stock.getOperator());//得到操作者
+			stockEntity.setFundCode(fund.getFundCode());//得到基金代码
+			stockEntity.setFundName(fund.getFundName());//得到基金名称
+			//设置记录数
+			stockEntity.setStockNum(count);
+			//设置状态 统计完成
+			stockEntity.setStockType(1);
+			return stockEntity;
+		}
+		//删除今日库存
+		stockDao.deleteCashStock(new DateParams(null, null, null,null, stock.getFundCode(), null, todayStatisticsDate));
+		//遍历现金库存统计数据集合
+		for(MoneyAllot inputMoneyAllot:moneyAllotList){
+			//当资金调拨的总金额不为零时，统计到现金库存
+			if(inputMoneyAllot.getMoney()!=0){
+				//得到现金库存编号
+				cashStockEntity.setCashStockCode(autoBianService.getAutoBianhao("cash_stock", "XJKC", "cash_stock_code", "cash_statistic_date", todayStatisticsDate));
+				//得到基金代码
+				cashStockEntity.setFundCode(stock.getFundCode());
+				//得到现金账户
+				cashStockEntity.setCashAccountCode(inputMoneyAllot.getAccountCode());
+				//得到现金余额
+				cashStockEntity.setCashBlance(inputMoneyAllot.getMoney());
+				//得到统计日期
+				cashStockEntity.setStatisticDate(todayStatisticsDate);
+				//得到期初标志
+				cashStockEntity.setPeriodFlag(2d);
+				cashStockEntity.setCashDesc("");
+				//增加到现金库存
+				count+=cashStockDao.insertCashStock(cashStockEntity);
+			} 
+		}
+		//设置返回的stock实体类 基金编号
+		stockEntity.setStatisticsDate(stock.getStatisticsDate()); //统计日期
+		stockEntity.setOperator(stock.getOperator()); //得到操作者
+		stockEntity.setFundCode(fund.getFundCode());//得到基金代码
+		stockEntity.setFundName(fund.getFundName());//得到基金名称
+		//设置记录数
+		stockEntity.setStockNum(count);
+		//设置状态 统计完成
+		stockEntity.setStockType(1);
+		return stockEntity;
+
+	}
+
+	@Override
+	public Stock securityArapStockStatistics(Stock stock) throws Exception {
+		// TODO Auto-generated method stub
+		Fund fund=stockDao.selectFund(stock.getFundCode());//得到基金成立日期 通过fundCode查询该基金的信息
+		Date todayStatisticsDate=AllUtil.getDate(stock.getStatisticsDate());//得到今天的统计日期
+		Date fundEstablishDate=fund.getEstablishDate();//得到基金成立日期
+		Date yesterdayDate=AllUtil.getDate(stock.getStatisticsDate(), -1);//得到昨日日期
+		SecurityArapStock securityArapStockEntity=new SecurityArapStock();//创建一个证券应收应付库存实体类
+		Stock stockEntity=new Stock();//实体类
+		/**
+		 * 统计日期小于基金成立日期  
+		 * 提示统计日期必须在基金成立日期这天或者之后
+		 */
+		if(todayStatisticsDate.getTime()<fundEstablishDate.getTime()){
+			stock.setFlag(2);//标志说明 2不可以统计 
+			return stock;
+		}
+		/**
+		 * 统计日期大于成立日期 没有昨日库存 
+		 * 提示请统计昨日库存
+		 */
+		//查询昨日库存
+		int list=stockDao.selectSecurityArapStock(new DateParams(1, null, null, null, stock.getFundCode(), yesterdayDate, null));
+		if(todayStatisticsDate.getTime()>fundEstablishDate.getTime() && stock.getFlag()==2){
+			if(list<=0){
+				stock.setFlag(3);//请统计昨日库存
+				return stock;
+			}
+		}
+		/**
+		 * 得到证券应收应付库存统计之后的数据集合
+		 */
+		List<SecurityArapStock> securityArapStockList=stockDao.selectSecurityArapStockData(new DateParams(null, null, null, null, stock.getFundCode(), yesterdayDate, todayStatisticsDate));
+		//记录统计数据
+		int count=0;
+		//当统计之后的数据没有时，表示没有昨日库存以及今日发生额 提示统计成功
+		if(securityArapStockList.size()==0){
+			//得到统计数据
+			stockEntity.setStatisticsDate(stock.getStatisticsDate()); //统计日期
+			stockEntity.setOperator(stock.getOperator());//得到操作者
+			stockEntity.setFundCode(fund.getFundCode());//得到基金代码
+			stockEntity.setFundName(fund.getFundName());//得到基金名称
+			//设置记录数
+			stockEntity.setStockNum(count);
+			//设置状态 统计完成
+			stockEntity.setStockType(1);
+			return stockEntity;
+		}
+		//删除证券应收应付库存今日数据
+		stockDao.deleteSecurityArapStock(new DateParams(null, null, null, null, stock.getFundCode(), null, todayStatisticsDate));
+		//遍历证券应收应付库存统计数据集合
+		for(SecurityArapStock securityArapStock:securityArapStockList){
+			//当证券应收应付库存的总金额不为零，添加到证券应收应付库存
+			if(securityArapStock.getTotalMoney()!=0){
+				//设置证券应收应付库存编号
+				securityArapStockEntity.setSecurityArapStockCode(autoBianService.getAutoBianhao("security_arap_stock", "ZJYSYFKC", "security_arap_stock_code", "business_date", todayStatisticsDate));
+				//设置现金账户设置
+				securityArapStockEntity.setCashAccountCode(fund.getCashAccountCode());
+				//设置证券id
+				securityArapStockEntity.setSecurityCode(securityArapStock.getSecurityCode());
+				//设置业务状态
+				securityArapStockEntity.setBusinessStatus(1); //应收
+				securityArapStockEntity.setTotalMoney(securityArapStock.getTotalMoney());//设置总金额
+				//设置业务类型 都是债券利息
+				securityArapStockEntity.setBusinessType(3);
+				//设置基金代码
+				securityArapStockEntity.setFundCode(fund.getFundCode());
+				//设置统计日期
+				securityArapStockEntity.setBusinessDate(todayStatisticsDate);
+				//设置不是期初数据
+				securityArapStockEntity.setPeriodFlag(2);
+				//设置备注
+				securityArapStockEntity.setSecurityArapStockDesc("");
+				//增加
+				count+=stockDao.insertSecurityArapStock(securityArapStockEntity);
+			}
+
+		}
+		//得到统计数据
+		stockEntity.setStatisticsDate(stock.getStatisticsDate());//统计日期
+		stockEntity.setOperator(stock.getOperator());//得到操作者
+		stockEntity.setFundCode(fund.getFundCode());//得到基金代码
+		stockEntity.setFundName(fund.getFundName());//得到基金名称
+		//设置记录数
+		stockEntity.setStockNum(count);
+		//设置状态 统计完成
+		stockEntity.setStockType(1);
+		return stockEntity;
+	}
+
+	@Override
+	public Stock cashArapStockStatistics(Stock stock) throws Exception {
+		// TODO Auto-generated method stub
+		Fund fund=stockDao.selectFund(stock.getFundCode());//得到基金成立日期 通过fundCode查询该基金的信息
+		Date todayStatisticsDate=AllUtil.getDate(stock.getStatisticsDate());//得到今天的统计日期
+		Date fundEstablishDate=fund.getEstablishDate();//得到基金成立日期
+		Date yesterdayDate=AllUtil.getDate(stock.getStatisticsDate(), -1);//得到昨日日期
+		CashArapStock cashArapStockEntity=new CashArapStock();//创建一个现金应收应付库存实体类
+		Stock stockEntity=new Stock();//实体类
+		/**
+		 * 统计日期小于基金成立日期  
+		 * 提示统计日期必须在基金成立日期这天或者之后
+		 */
+		if(todayStatisticsDate.getTime()<fundEstablishDate.getTime()){
+			stock.setFlag(2);//标志说明 2不可以统计 
+			return stock;
+		}
+		/**
+		 * 统计日期大于成立日期 没有昨日库存 
+		 * 提示请统计昨日库存
+		 */
+		//查询昨日库存
+		int list=stockDao.selectCashArapStock(new DateParams(1, null, null, null, stock.getFundCode(), yesterdayDate, null));
+		if(todayStatisticsDate.getTime()>fundEstablishDate.getTime() && stock.getFlag()==2){
+			if(list<=0){
+				stock.setFlag(3);//请统计昨日库存
+				return stock;
+			}
+		}
+		/**
+		 * 统计现金应收应付库存
+		 */
+		//统计之后的库存数据
+		List<CashArapStock> cashArapStockList=stockDao.selectCashArapStockData(new DateParams(null, null, null, null, stock.getFundCode(), yesterdayDate, todayStatisticsDate));
+		int count=0;//记录统计数
+		//当统计现金应应付库存数据为0 表示没有昨日库存以及今日发生额 提示统计成功
+		if(cashArapStockList.size()==0){
+			stockEntity.setStatisticsDate(stock.getStatisticsDate()); //统计日期
+			stockEntity.setOperator(stock.getOperator());//得到操作者
+			stockEntity.setFundCode(fund.getFundCode());//得到基金代码
+			stockEntity.setFundName(fund.getFundName());//得到基金名称
+			//设置记录数
+			stockEntity.setStockNum(count);
+			//设置状态 统计完成
+			stockEntity.setStockType(1);
+			return stockEntity;
+		}
+		//删除今日数据
+		stockDao.deleteCashArapStock(new DateParams(1, null, null, null, stock.getFundCode(), null, todayStatisticsDate));
+		//遍历统计之后的现金应收应付库存集合
+		for(CashArapStock cashArapStock:cashArapStockList){
+			//查询现金应收应付库存的总金额不为零，添加到现金应收应付库存
+			if(cashArapStock.getTotalMoney()!=0){
+				//设置业务状态 应收 或者是 应付
+				if(cashArapStock.getBusinessType()==3){
+					cashArapStockEntity.setStatus(1);
+					//设置总金额
+					cashArapStockEntity.setTotalMoney(cashArapStock.getTotalMoney());
+				}else {
+					cashArapStockEntity.setStatus(-1);
+					//设置总金额
+					cashArapStockEntity.setTotalMoney(-cashArapStock.getTotalMoney());
+				}
+				//设置业务类型 两费 以及 存款利息
+				cashArapStockEntity.setBusinessType(cashArapStock.getBusinessType());
+				//设置不是期初数据
+				cashArapStockEntity.setPeriodFlag(2);
+				//设置现金应收应付库存编号
+				cashArapStockEntity.setCashArapStockCode(autoBianService.getAutoBianhao("cash_arap_stock", "XJYSYFKC", "cash_arap_stock_code", "business_date", todayStatisticsDate));
+				//设置现金账户id
+				cashArapStockEntity.setCashAccountCode(fund.getCashAccountCode());
+				//设置基金代码
+				cashArapStockEntity.setFundCode(stock.getFundCode());
+				//设置统计日期
+				cashArapStockEntity.setBusinessDate(todayStatisticsDate);
+				//设置备注
+				cashArapStockEntity.setCashArapStockDesc("");
+				//增加
+				count+=cashArapStockDao.insertCashArapStock(cashArapStockEntity);
+			} 
+		}
+		stockEntity.setStatisticsDate(stock.getStatisticsDate());//统计日期
+		stockEntity.setOperator(stock.getOperator());//得到操作者
+		stockEntity.setFundCode(fund.getFundCode());//得到基金代码
+		stockEntity.setFundName(fund.getFundName());//得到基金名称
+		//设置记录数
+		stockEntity.setStockNum(count);
+		//设置状态 统计完成
+		stockEntity.setStockType(1);
+		return stockEntity;
+	}
+
+	@Override
+	public Stock taStockStatistics(Stock stock) throws Exception {
+		// TODO Auto-generated method stub
+		Fund fund=stockDao.selectFund(stock.getFundCode());//得到基金成立日期 通过fundCode查询该基金的信息
+		Date todayStatisticsDate=AllUtil.getDate(stock.getStatisticsDate());//得到今天的统计日期
+		Date fundEstablishDate=fund.getEstablishDate();//得到基金成立日期
+		Date yesterdayDate=AllUtil.getDate(stock.getStatisticsDate(), -1);//得到昨日日期
+		TaStock taStockEntity=new TaStock();//创建一个TA库存实体类
+		Stock stockEntity=new Stock();//实体类
+		/**
+		 * 统计日期小于基金成立日期  
+		 * 提示统计日期必须在基金成立日期这天或者之后
+		 */
+		if(todayStatisticsDate.getTime()<fundEstablishDate.getTime()){
+			stock.setFlag(2);//标志说明 2不可以统计 
+			return stock;
+		}
+		/**
+		 * 统计日期大于成立日期  没有昨日库存 
+		 * 提示请统计昨日库存
+		 */
+		//查询昨日库存
+		int list=stockDao.selectTaStock(new DateParams(null, null, null, null, stock.getFundCode(), yesterdayDate,null));
+		if(todayStatisticsDate.getTime()>fundEstablishDate.getTime() && stock.getFlag()==2){
+			if(list<=0){
+				stock.setFlag(3);//请统计昨日库存
+				return stock;
+			}
+		}
+		/**
+		 * 查询统计之后的TA库存 
+		 * 并且增加到TA库存表
+		 */
+		//查询统计之后的集合
+		List<TaStock> taStockList=stockDao.selectTaTradeData(new DateParams(null, null, null, null, stock.getFundCode(), yesterdayDate, todayStatisticsDate));
+		int count=0;//记录
+		//统计TA库存数据为0 表示没有昨日库存以及今日发生额 提示统计成功
+		if(taStockList.size()==0){
+			stockEntity.setStatisticsDate(stock.getStatisticsDate()); //统计日期
+			stockEntity.setOperator(stock.getOperator());//得到操作者
+			stockEntity.setFundCode(fund.getFundCode());//得到基金代码
+			stockEntity.setFundName(fund.getFundName());//得到基金名称
+			//设置记录数
+			stockEntity.setStockNum(count);
+			//设置状态 统计完成
+			stockEntity.setStockType(1);
+			return stockEntity;
+		}
+		//删除今日库存数据
+		stockDao.deleteTaStock(new DateParams(1, null, null, null, stock.getFundCode(), null, todayStatisticsDate));
+		//遍历TA库存统计之后的数据
+		for(TaStock taStock:taStockList){
+			//TA库存数据的总金额不为零 添加到TA库存
+			if(taStock.getTaStockMoney()!=0){
+				//设置基金代码
+				taStockEntity.setFundCode(taStock.getFundCode());
+				//设置期初标志
+				taStockEntity.setPeriodFlag(2);
+				//设置统计日期
+				taStockEntity.setStatisticDate(todayStatisticsDate);
+				//设置TA库存编号
+				taStockEntity.setTaStockCode(autoBianService.getAutoBianhao("ta_stock", "TAKC", "ta_stock_code", "statistic_date", todayStatisticsDate));
+				//设置数量
+				taStockEntity.setTaStockQuantity(taStock.getTaStockQuantity());
+				//得到总数量
+				taStockEntity.setTaStockMoney(taStock.getTaStockMoney());
+				//备注
+				taStockEntity.setTaStockDesc("");
+				//增加TA库存
+				count+=taStockDao.insertTaStock(taStockEntity);
+			} 
+		}
+		stockEntity.setStatisticsDate(stock.getStatisticsDate());//统计日期
+		stockEntity.setOperator(stock.getOperator());//得到操作者
+		stockEntity.setFundCode(fund.getFundCode());//得到基金代码
+		stockEntity.setFundName(fund.getFundName());//得到基金名称
+		//设置记录数
+		stockEntity.setStockNum(count);
+		//设置状态 统计完成
+		stockEntity.setStockType(1);
+		return stockEntity;
+	}
+
+}

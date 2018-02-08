@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace 指明SQL语句映射针对于实体对象 -->
+<mapper namespace="com.yidu.businessData.dao.EquityDataDao">
+	<insert id="insertEquityData" parameterType="com.yidu.businessData.domain.EquityData">
+		insert into equity_data(equity_data_code,cash_account_code,security_code,register_day,ex_day,send_stock_scale,share_qut_bonus_scale,to_account_date,equity_data)values
+		(#{eqDataCode},#{cashAccountCode},#{securityCode},#{eqRegisterDay},#{eqExDay},#{eqSendStockScale},#{eqShareOutBonusScale},#{eqToAccountDate},#{eqDesc}) 
+	</insert>
+	<update id="updateEquityData" parameterType="com.yidu.businessData.domain.EquityData">
+		update equity_data set cash_account_code=#{cashAccountCode},security_code=#{securityCode},register_day=#{eqRegisterDay},ex_day=#{eqExDay},send_stock_scale=#{eqSendStockScale},share_qut_bonus_scale=#{eqShareOutBonusScale},to_account_date=#{eqToAccountDate},equity_data=#{eqDesc} where equity_data_code=#{eqDataCode}
+	</update>
+	<delete id="deleteEquityData" parameterType="com.yidu.businessData.domain.EquityData">
+		delete from equity_data where equity_data_code in (${eqDataCode})
+	</delete>
+	<resultMap type="com.yidu.businessData.domain.EquityData" id="equitMap">
+		<id property="eqDataCode" column="equity_data_code"/>
+		<result property="cashAccountCode" column="cash_account_code"/>
+		<result property="securityCode" column="security_code"/>
+		<result property="eqRegisterDay" column="register_day"/>
+		<result property="eqExDay" column="ex_day"/>
+		<result property="eqShareOutBonusScale" column="share_qut_bonus_scale"/>
+		<result property="eqSendStockScale" column="send_stock_scale"/>
+		<result property="eqToAccountDate" column="to_account_date"/>
+		<result property="eqDesc" column="equity_data"/>
+	</resultMap>
+	<parameterMap type="java.util.Map" id="equityDataMap">
+		<parameter property="tabName" javaType="STRING" jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="qualification" javaType="STRING" jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="page" javaType="int" jdbcType="INTEGER" mode="INOUT"/>
+		<parameter property="rows" javaType="int" jdbcType="INTEGER" mode="INOUT"/>
+		<parameter property="pageTotal" javaType="int" jdbcType="INTEGER" mode="OUT"/>
+		<parameter property="rowsTotal" javaType="int" jdbcType="INTEGER" mode="OUT"/>
+		<parameter property="orderColumn" javaType="STRING" jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="orderStyle" javaType="STRING" jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="cursor" jdbcType="CURSOR" mode="OUT" resultMap="equitMap"/>
+	</parameterMap>
+	<select id="selectEquityData" parameterMap="equityDataMap" statementType="CALLABLE">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)	
+	</select>
+	<select id="selectEquityDataCode"  parameterType="String" resultMap="equitMap">
+		select * from equity_data where equity_data_code=#{eqDataCode}
+	</select>
+</mapper>

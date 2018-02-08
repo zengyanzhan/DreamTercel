@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace 指明SQL语句映射针对于实体对象 该对象是库存管理的证券库存dao接口类 -->
+<mapper namespace="com.yidu.dayEnd.dao.StockDao">
+	<parameterMap type="java.util.Map" id="selectStockMap">
+		<parameter property="tableName" javaType="String" jdbcType="VARCHAR"
+			mode="IN" />
+		<parameter property="qualification" javaType="String"
+			jdbcType="VARCHAR" mode="IN" />
+		<parameter property="page" javaType="INTEGER" jdbcType="INTEGER"
+			mode="INOUT" />
+		<parameter property="rows" javaType="INTEGER" jdbcType="INTEGER"
+			mode="INOUT" />
+		<parameter property="pageTotal" javaType="INTEGER" jdbcType="INTEGER"
+			mode="OUT" />
+		<parameter property="rowsTotal" javaType="INTEGER" jdbcType="INTEGER"
+			mode="OUT" />
+		<parameter property="orderColumn" javaType="String"
+			jdbcType="VARCHAR" mode="IN" />
+		<parameter property="orderStyle" javaType="String" jdbcType="VARCHAR"
+			mode="IN" />
+		<parameter property="cursor" jdbcType="CURSOR" mode="OUT"
+			resultMap="stockResultMap" />
+	</parameterMap>
+	<resultMap type="com.yidu.dayEnd.domain.Stock" id="stockResultMap">
+		<id property="stockCode" column="right_code" />
+		<result property="stockName" column="right_text" />
+	</resultMap>
+	<select id="selectStock" parameterMap="selectStockMap"
+		statementType="CALLABLE">
+		call
+		pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<!-- 查询基金信息表 -->
+	<resultMap type="Fund" id="fundResultMap">
+		<id property="fundCode" column="fund_code" />
+		<result property="fundName" column="fund_name" />
+		<result property="cashAccountCode" column="cash_account_code" />
+		<result property="establishDate" column="establish_date" />
+	</resultMap>
+	<!-- 查询基金数据 -->
+	<select id="selectFund" parameterType="String" resultMap="fundResultMap">
+		select
+		* from fund where fund_code=#{fundCode}
+	</select>
+	<!-- 证券库存统计 -->
+	<resultMap type="SecurityStock" id="securityStockResultMap">
+		<id property="code" column="security_stock_code" />
+		<result property="securityQuantity" column="security_quantity" />
+		<result property="totalMoney" column="security_total_money" />
+	</resultMap>
+	<!-- 查询证券库存昨日库存数据 -->
+	<select id="selectSecurityStock" parameterType="com.yidu.dayEnd.domain.DateParams"
+		resultMap="securityStockResultMap">
+		select * from security_stock where 1=1
+		<if test="yesterdayDate != null">
+			and security_statistics_date=#{yesterdayDate}
+		</if>
+		<if test="fundCode != null">
+			and fund_code=#{fundCode}
+		</if>
+	</select>
+	<!-- 证券库存返回集 -->
+	<resultMap type="DealData" id="tradeDateResultMap">
+		<id property="fundCode" column="fund_code" />
+		<result property="securityCode" column="security_code" />
+		<result property="cashAccountCode" column="cash_account_code" />
+		<result property="dealQuantity" column="quantity" />
+		<result property="dealTotalPrice" column="totalMoney" />
+	</resultMap>
+	<!-- 统计证券库存数据 -->
+	<select id="selectTradeData" parameterType="com.yidu.dayEnd.domain.DateParams"
+		resultMap="tradeDateResultMap">
+		select
+		nvl(today.fund_code,nvl(inputDeal.fund_code,outputDeal.fund_code))
+		fund_code,
+		nvl(today.security_code,nvl(inputDeal.security_code,outputDeal.security_code))
+		security_code,
+		nvl(today.cash_account_code,nvl(inputDeal.cash_account_code,outputDeal.cash_account_code))
+		cash_account_code,
+		nvl((nvl(today.quantity,0)+nvl(inputDeal.quantity,0)-nvl(outputDeal.quantity,0)),0)
+		quantity,
+		nvl((nvl(today.totalMoney,0)+nvl(inputDeal.totalMoney,0)-nvl(outputDeal.totalMoney,0)),0)
+		totalMoney
+		from
+		(select
+		fund_code,cash_account_code,security_code,security_name,nvl(security_total_money,0)
+		totalMoney,nvl(security_quantity,0) quantity
+		from security_stock where
+		security_statistics_date=#{yesterdayDate}
+		and fund_code=#{fundCode})
+		today
+		full join
+		(select
+		fund_code,security_code,cash_account_code,nvl(sum(nvl(deal_quantity,0)),0)
+		quantity,nvl(sum(nvl(deal_total_price,0)),0) totalMoney from deal_data
+		where deal_date=#{todayStatisticsDate} and fund_code=#{fundCode} and
+		deal_type='1' or deal_type='4'
+		group by
+		fund_code,security_code,cash_account_code) inputDeal
+		on
+		today.fund_code=inputDeal.fund_code and
+		today.security_code=inputDeal.security_code
+		full join
+		(select
+		fund_code,security_code,cash_account_code,nvl(sum(nvl(deal_quantity,0)),0)
+		quantity,nvl(sum(nvl(deal_total_price,0)),0) totalMoney from deal_data
+		where deal_date=#{todayStatisticsDate} and fund_code=#{fundCode} and
+		deal_type='2'
+		group by fund_code,security_code,cash_account_code)
+		outputDeal
+		on inputDeal.fund_code=outputDeal.fund_code
+		and
+		inputDeal.security_code=outputDeal.security_code
+	</select>
+	<!-- 删除今日证券库存数据 -->
+	<delete id="deleteSecurityStock" parameterType="com.yidu.dayEnd.domain.DateParams">
+		delete from
+		security_stock where
+		security_statistics_date=#{todayStatisticsDate}
+		and
+		fund_code=#{fundCode}
+	</delete>
+	<!-- 现金库存统计 -->
+	<!--现金库存数据返回集  -->
+	<resultMap type="com.yidu.stockControl.domain.CashStock" id="cashStockResultMap">
+		<id property="FundCode" column="fund_code" />
+		<result property="CashBlance" column="cash_blance" />
+	</resultMap>
+	<!--查询现金库存昨日库存数据  -->
+	<select id="selectCashStock" parameterType="com.yidu.dayEnd.domain.DateParams"
+		resultMap="cashStockResultMap">
+		select * from cash_stock where 1=1
+		<if test="yesterdayDate != null">
+			and cash_statistic_date=#{yesterdayDate}
+		</if>
+		<if test="fundCode != null">
+			and fund_code=#{fundCode}
+		</if>
+	</select>
+	<!-- 现金库存数据返回集 -->
+	<resultMap type="MoneyAllot" id="MoneyAllotResultMap">
+		<id property="fundCode" column="fund_code" />
+		<result property="money" column="totalMoney" />
+		<result property="accountCode" column="cash_account_code" />
+	</resultMap>
+	<!-- 统计现金库存数据 -->
+	<select id="selectMoneyAllot" parameterType="com.yidu.dayEnd.domain.DateParams"
+		resultMap="MoneyAllotResultMap">
+		select nvl(today.fund_code,yesterday.fund_code) fund_code,
+		nvl(today.cash_account_code,yesterday.cash_account_code)
+		cash_account_code,
+		nvl((nvl(today.fund_allot_money,0)+nvl(yesterday.cashBlance,0)),0)
+		totalMoney
+		from (select
+		fund_code,nvl(sum(nvl(fund_allot_money,0)*nvl(fund_allot_direction,0)),0)
+		fund_allot_money,cash_account_code from fund_allot where
+		fund_allot_Date=#{todayStatisticsDate} and fund_code=#{fundCode} group
+		by
+		fund_code,cash_account_code) today full join
+		(select
+		fund_code,cash_account_code,nvl(sum(cash_blance),0) cashBlance from
+		cash_stock where cash_statistic_date=#{yesterdayDate} and
+		fund_code=#{fundCode} group by fund_code,cash_account_code) yesterday
+		on today.fund_code=yesterday.fund_code and
+		today.cash_account_code=yesterday.cash_account_code
+	</select>
+	<!-- 删除现金库存昨日库存 -->
+	<delete id="deleteCashStock" parameterType="com.yidu.dayEnd.domain.DateParams">
+		delete from
+		cash_stock where 1=1 and
+		cash_statistic_date=#{todayStatisticsDate}
+		and
+		fund_code=#{fundCode}
+	</delete>
+	<!-- TA库存统计 -->
+	<!-- 查询TA库存昨日库存数据 -->
+	<select id="selectTaStock" parameterType="com.yidu.dayEnd.domain.DateParams"
+		resultType="int">
+		select count(*) from ta_stock where 1=1
+		<if test="yesterdayDate != null">
+			and statistic_date=#{yesterdayDate}
+		</if>
+		<if test="fundCode != null">
+			and fund_code=#{fundCode}
+		</if>
+	</select>
+	<!-- TA库存数据返回集 -->
+	<resultMap type="TaStock" id="TaTradeDataResultMap">
+		<id property="fundCode" column="fundCode" />
+		<result property="taStockQuantity" column="quantity" />
+		<result property="taStockMoney" column="money" />
+	</resultMap>
+	<!-- 统计TA库存数据 -->
+	<select id="selectTaTradeData" parameterType="com.yidu.dayEnd.domain.DateParams"
+		resultMap="TaTradeDataResultMap">
+		select
+		nvl(one.fund_code,nvl(two.fund_code,three.fund_code))
+		fundCode,nvl(nvl(two.quantity,0)+nvl(three.quantity,0)-nvl(one.quantity,0),0)
+		quantity,
+		nvl(nvl(two.money,0)+nvl(three.money,0)-nvl(one.money,0),0)
+		money
+		from
+		(select fund_code,sum(ta_trad_quality)
+		quantity,sum(ta_total_money) money
+		from ta_trad_data where
+		ta_trade_date=#{todayStatisticsDate}
+		and fund_code=#{fundCode}
+		and
+		ta_rade_type='3'
+		group by fund_code)
+		one
+		full join
+		(select
+		fund_code,sum(ta_trad_quality)
+		quantity,sum(ta_total_money) money
+		from
+		ta_trad_data where
+		ta_trade_date=#{todayStatisticsDate}
+		and
+		fund_code=#{fundCode}
+		and
+		(ta_rade_type='1' or ta_rade_type='2')
+		group by
+		fund_code) two on
+		one.fund_code=two.fund_code
+		full join
+		(select
+		fund_code,ta_stock_quantity quantity,ta_stock_money money from
+		ta_stock where statistic_date=#{yesterdayDate} and
+		fund_code=#{fundCode}) three on two.fund_code=three.fund_code
+	</select>
+	<!-- 删除TA库存今日库存数据 -->
+	<delete id="deleteTaStock" parameterType="com.yidu.dayEnd.domain.DateParams">
+		delete from ta_stock
+		where statistic_date=#{todayStatisticsDate} and
+		fund_code=#{fundCode}
+	</delete>
+	<!-- 现金应收应付库存统计 -->
+	<!-- 查询现金应收应付库存昨日库存 -->
+	<select id="selectCashArapStock" parameterType="com.yidu.dayEnd.domain.DateParams"
+		resultType="int">
+		select count(*) from
+		cash_arap_stock where 1=1
+		and
+		fund_code=#{fundCode} and
+		business_date=#{yesterdayDate}
+	</select>
+	<!-- 现金应收应付库存返回集 -->
+	<resultMap type="CashArapStock" id="CashArapStockResultMap">
+		<id property="fundCode" column="fund_code" />
+		<result property="businessType" column="type" />
+		<result property="totalMoney" column="totalMoney" />
+	</resultMap>
+	<!-- 统计现金应收应付库存数据 -->
+	<select id="selectCashArapStockData" parameterType="com.yidu.dayEnd.domain.DateParams"
+		resultMap="CashArapStockResultMap"> 
+		select
+		nvl(two.fund_code,one.fund_code)
+		fund_code,nvl(two.cash_arap_type,one.business_type)
+		type,(nvl((nvl(one.totalMoney,0)+nvl(two.totalMoney,0)),0)) totalMoney
+		from
+		(select
+		fund_code,cash_arap_type,nvl(sum(nvl(money,0)*nvl(money_direction,0)),0)
+		totalMoney from cash_arap where
+		business_date=#{todayStatisticsDate}
+		and fund_code=#{fundCode}
+		group by fund_code,cash_arap_type) two full
+		join (
+		select
+		fund_code,business_type,nvl(sum(nvl(total_money,0)*nvl(status,0)),0)
+		totalMoney from cash_arap_stock where
+		business_date=#{yesterdayDate}
+		and fund_code=#{fundCode}
+		and business_type != 4 group by
+		fund_code,business_type) one on
+		two.fund_code=one.fund_code and
+		two.cash_arap_type=one.business_type
+	</select>
+	<!-- 删除昨日现金应收应付库存数据 -->
+	<delete id="deleteCashArapStock" parameterType="com.yidu.dayEnd.domain.DateParams">
+		delete from
+		cash_arap_stock where business_date=#{todayStatisticsDate} and
+		fund_code=#{fundCode} and business_type!=4
+	</delete>
+	<!-- 证券应收应付库存统计 -->
+	<!-- 查询证券应收应付库存昨日库存 -->
+	<select id="selectSecurityArapStock" parameterType="com.yidu.dayEnd.domain.DateParams"
+		resultType="int">
+		select count(*) from
+		security_arap_stock where 1=1
+		and
+		fund_code=#{fundCode} and
+		business_date=#{yesterdayDate}
+	</select>
+	<!-- 证券应收应付库存返回集 -->
+	<resultMap type="SecurityArapStock" id="SecurityArapStockResultMap">
+		<id property="fundCode" column="fund_code" />
+		<result property="securityCode" column="security_code" />
+		<result property="totalMoney" column="totalMoney" />
+	</resultMap>
+	<!-- 统计证券应收应付库存数据 -->
+	<select id="selectSecurityArapStockData" parameterType="com.yidu.dayEnd.domain.DateParams"
+		resultMap="SecurityArapStockResultMap">
+		select nvl(one.fund_code,two.fund_code)
+		fund_code,nvl(one.security_code,two.security_code) security_code ,
+		nvl((nvl(one.totalMoney,0)+nvl(two.totalMoney,0)),0) totalMoney from (
+		select fund_code,security_code,nvl(sum(nvl(total_money,0)),0)
+		totalMoney from security_arap_stock where
+		business_date=#{yesterdayDate} and fund_code=#{fundCode}
+		and
+		business_type=3 group by fund_code,security_code) one full join
+		(select
+		fund_code,security_code,nvl(sum(nvl(money_direction,0)*nvl(money,0)),0)
+		totalMoney from security_arap where
+		business_date=#{todayStatisticsDate} and
+		fund_code=#{fundCode} and
+		security_arap_type=3
+		group by
+		fund_code,security_code) two on
+		one.fund_code=two.fund_code and
+		one.security_code=two.security_code
+	</select>
+	<!-- 删除证券应收应付库存的今日库存 -->
+	<delete id="deleteSecurityArapStock" parameterType="com.yidu.dayEnd.domain.DateParams">
+		delete from
+		security_arap_stock where business_date=#{todayStatisticsDate} and
+		fund_code=#{fundCode} and business_type=3
+	</delete>
+	<!-- 增加证券应收应付库存的统计数据 -->
+	<insert id="insertSecurityArapStock" parameterType="SecurityArapStock">
+		insert into
+		security_arap_stock
+		values(#{securityArapStockCode},#{cashAccountCode},#{fundCode},#{securityCode},
+		#{businessType},#{totalMoney},#{periodFlag},#{businessStatus},#{businessDate},#{securityArapStockDesc})
+	</insert>
+</mapper>

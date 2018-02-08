@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="com.yidu.reportManagement.dao.SecurityMarketDao">
+	<resultMap type="SecurityMarket" id="securityMarketResultMap">
+		<!-- property 实体类属性名 column 表的字段名 -->
+		<result property="securityCode" column="security_code" />
+		<result property="securityName" column="security_name" />
+		<result property="securityUnitCost" column="security_util_cost" />
+		<result property="securityQuantity" column="security_quantity" />
+		<result property="projectCode" column="project_code" />
+		<result property="price" column="price" />
+		<result property="statisticDate" column="statistic_date" />
+		<result column="projectName" property="project_name"/>
+		<!-- <result column="fundCode" property="fund_code"/> -->
+	</resultMap>
+	
+	<parameterMap type="java.util.Map" id="selectSecurityMarketParameterMap">
+		<parameter property="tableName" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="qualification" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="page" jdbcType="INTEGER" mode="INOUT" />
+		<parameter property="rows" jdbcType="INTEGER" mode="INOUT" />
+		<parameter property="pageTotal" jdbcType="INTEGER" mode="OUT" />
+		<parameter property="rowsTotal" jdbcType="INTEGER" mode="OUT" />
+		<parameter property="orderColumn" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="orderStyle" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="securityMarketList" jdbcType="CURSOR"
+			mode="OUT" resultMap="securityMarketResultMap" />
+	</parameterMap>
+	<!-- 按条件查询和查询所有 -->
+	<select id="selectSecurityMarket" statementType="CALLABLE"
+		parameterMap="selectSecurityMarketParameterMap" resultMap="securityMarketResultMap">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+		<!-- 查询净值统计的资产净值、债券、资产合计 -->
+	<select id="selectNetValue" resultType="SecurityMarket" parameterType="SecurityMarket">
+	    select nvl(project_code,0) as projectCode from net_value 
+	    where 1=1 and project_name='${projectName}'  
+	    and  fund_code='${fundCode}' 
+	    and statistic_date=to_date('${businessDateWhere}','yyyy-MM-dd')
+    </select>
+	</mapper>

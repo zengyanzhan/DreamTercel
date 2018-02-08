@@ -1,0 +1,29 @@
+package com.yidu.system.dao;
+
+import org.springframework.stereotype.Repository;
+
+import com.yidu.system.domain.RoleRight;
+
+/**
+ * 角色权限表的数据库操作类接口
+ * @author ZouJianwen
+ * @data  2017年11月17日
+ * @time  下午1:31:38
+ *
+ */
+@Repository
+public interface RoleRightDao {
+
+	/**
+	 * 增加角色权限
+	 * @param roleRight 角色权限的对象
+	 * @return 增加的条数
+	 */
+	public Integer insertRoleRight(RoleRight roleRight);
+	/**
+	 * 删除角色权限
+	 * @param roleRight  角色权限的对象
+	 * @return 删除的条数
+	 */
+	public Integer deleteRoleRight(RoleRight roleRight);
+}

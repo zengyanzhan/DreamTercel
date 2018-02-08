@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">      
+<!-- namespace 指明SQL语句映射针对于实体对象 -->
+<mapper namespace="com.yidu.transactionProcessing.dao.DealDataDao">
+	<!-- 参数map类型 -->
+	<parameterMap type="java.util.Map" id="selectDealDataInMap">
+		<parameter property="tableName" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="qualification" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="page" mode="INOUT" jdbcType="INTEGER"/>
+		<parameter property="rows" mode="INOUT" jdbcType="INTEGER"/>
+		<parameter property="pageTotal" mode="OUT"  jdbcType="INTEGER"/>
+		<parameter property="rowsTotal" mode="OUT"  jdbcType="INTEGER"/>
+		<parameter property="orderColumn" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="orderStyle" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="cursor" mode="OUT" resultMap="selectDealDataOutMap" jdbcType="CURSOR"/>
+	</parameterMap>
+	<!-- 返回类型 -->
+	<resultMap type="DealData" id="selectDealDataOutMap">
+		<id column="deal_data_code" property="dealDataCode"/>
+		<result column="fund_code" property="fundCode"/>
+		<result column="security_code" property="securityCode"/>
+		<result column="deal_date" property="dealDate"/>
+		<result column="set_account_date" property="setAccountDate"/>
+		<result column="user_code" property="userCode"/>
+		<result column="broker_code" property="brokerCode"/>
+		<result column="trade_seat_code" property="tradeSeatCode"/>
+		<result column="deal_type" property="dealType"/>
+		<result column="deal_flag" property="dealFlag"/>
+		<result column="cash_account_code" property="cashAccountCode"/>
+		<result column="deal_price" property="dealPrice"/>
+		<result column="deal_quantity" property="dealQuantity"/>
+		<result column="deal_total_price" property="dealTotalPrice"/>
+		<result column="stamp_duty" property="stampDuty"/>
+		<result column="management_fee" property="managementFee"/>
+		<result column="transfer_fee" property="transferFee"/>
+		<result column="commission_fee" property="commissionFee"/>
+		<result column="brokerage_fee" property="brokerageFee"/>
+		<result column="real_collect_fee" property="realCollectFee"/>
+		<result column="security_interest" property="securityFnterest"/>
+		<result column="deal_status" property="dealStatus"/>
+		<result column="deal_data_desc" property="dealDataDesc"/>
+	</resultMap>
+	<select id="selectDealData" parameterMap="selectDealDataInMap" statementType="CALLABLE">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<!-- 获得交易单子号 -->
+	<select id="selectDealDataCode" parameterMap="selectDealDataInMap" statementType="CALLABLE">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	
+	<select id="selectDealDataById" parameterType="String" resultMap="selectDealDataOutMap">
+		select * from deal_data where deal_data_code=#{dealDataCode}
+	</select>
+	<insert id="insertDealData" parameterType="DealData">
+		insert into deal_data (deal_data_code,fund_code,security_code,deal_date,set_account_date,user_code,broker_code,trade_seat_code,deal_type,deal_flag,cash_account_code,deal_price,deal_quantity,
+		deal_total_price,stamp_duty,management_fee,transfer_fee,commission_fee,brokerage_fee,real_collect_fee,security_interest,deal_status,deal_data_desc) 
+		values(#{dealDataCode},#{fundCode},#{securityCode},#{dealDate},#{setAccountDate},#{userCode},#{brokerCode},#{tradeSeatCode},#{dealType},#{dealFlag},#{cashAccountCode},#{dealPrice},#{dealQuantity},
+		#{dealTotalPrice},#{stampDuty},#{managementFee},#{transferFee},#{commissionFee},#{brokerageFee},#{realCollectFee},#{securityFnterest},#{dealStatus},#{dealDataDesc})
+	</insert>
+	<update id="updateDealData" parameterType="DealData">
+		update deal_data set fund_code=#{fundCode},security_code=#{securityCode},deal_date=#{dealDate},set_account_date=#{setAccountDate},user_code=#{userCode},broker_code=#{brokerCode},trade_seat_code=#{tradeSeatCode},deal_type=#{dealType},deal_flag=#{dealFlag},cash_account_code=#{cashAccountCode},deal_price=#{dealPrice},deal_quantity=#{dealQuantity},
+		deal_total_price=#{dealTotalPrice},stamp_duty=#{stampDuty},management_fee=#{managementFee},transfer_fee=#{transferFee},commission_fee=#{commissionFee},brokerage_fee=#{brokerageFee},real_collect_fee=#{realCollectFee},security_interest=#{securityFnterest},deal_status=#{dealStatus},deal_data_desc=#{dealDataDesc}
+		where deal_data_code=#{dealDataCode}
+	</update>
+	<delete id="deleteDealData" parameterType="DealData">
+		delete from deal_data where deal_data_code in (${dealDataCode})
+	</delete>
+	<select id="selectTradeSettle" parameterMap="selectDealDataInMap" statementType="CALLABLE">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<parameterMap type="java.util.Map" id="StatusInMap">
+	    <parameter property="status"/>
+	    <parameter property="dealDataCode"/>
+	</parameterMap>
+	<update id="updateDealStatus" parameterMap="StatusInMap">
+	    update deal_data set deal_status=#{status} where deal_data_code=#{dealDataCode}
+	</update>
+</mapper>

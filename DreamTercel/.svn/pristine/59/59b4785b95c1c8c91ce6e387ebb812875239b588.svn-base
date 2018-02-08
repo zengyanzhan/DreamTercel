@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.reportManagement.dao.CashPositionReportDao">
+	<!-- 现金寸头报表 -->
+	<resultMap type="com.yidu.reportManagement.domain.CashPositionReport"
+		id="cashPositionResult">
+		<result property="projectPrice" column="projectPrice" />
+	</resultMap>
+	<!-- 查询现金余额 -->
+	<select id="selectCashBalance" parameterType="com.yidu.reportManagement.domain.ReportParams"
+		resultMap="cashPositionResult">
+		select
+		sum(cash_blance) as projectPrice from cash_stock
+		where
+		cash_statistic_date=to_date('${firstStrDate}','yyyy-mm-dd') and
+		fund_code='${fundCode}'
+	</select>
+	<!--查询证券清算款 -->
+	<select id="selectSecurityBlance" parameterType="com.yidu.reportManagement.domain.ReportParams"
+		resultMap="cashPositionResult">
+		select
+		dd.fund_code,dd.security_code,nvl(sum(nvl(dd.deal_total_price,0)*nvl(dd.deal_flag,0)),0)
+		projectPrice from deal_data dd join security se on
+		se.security_code=dd.security_code where fund_code='${fundCode}'
+		and
+		dd.set_account_date=to_date('${firstStrDate}','yyyy-mm-dd')
+		and
+		exchange_name='${exchangeCode}'
+		group by dd.fund_code,dd.security_code
+	</select>
+	<!-- 查询申购赎回清算款 -->
+	<select id="selectTaBlance" parameterType="com.yidu.reportManagement.domain.ReportParams"
+		resultMap="cashPositionResult">
+		select fund_code as fundCode, sum(case when ta_rade_type=1
+		or ta_rade_type=2 then
+		nvl(ta_total_money,0) else
+		nvl(ta_total_money,0)*-1 end) as projectPrice
+		from ta_trad_data where
+		fund_code='${fundCode}' and
+		settle_date=to_date('${secondStrDate}','yyyy-mm-dd') group by
+		fund_code
+	</select>
+</mapper>

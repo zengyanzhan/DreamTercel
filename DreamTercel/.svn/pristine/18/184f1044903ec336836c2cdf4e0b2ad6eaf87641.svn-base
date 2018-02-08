@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.stockControl.dao.CashStockDao">
+	<resultMap type="CashStock" id="CashStockResultMap">
+		<result property="CashStockCode" column="cash_stock_code" />
+		<result property="FundCode" column="fund_code" />
+		<result property="CashBlance" column="cash_blance" />
+		<result property="CashAccountCode" column="cash_account_code" />
+		<result property="StatisticDate" column="cash_statistic_date" />
+		<result property="PeriodFlag" column="cash_period_flag" />
+		<result property="CashDesc" column="cash_stock" /> 
+		
+	</resultMap>
+
+	<parameterMap type="map" id="selectCashStockMap">
+		<parameter property="tabName" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="qualification" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="page" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="rows" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="pageTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="rowsTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="orderColumn" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="orderStyle" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="cursor" jdbcType="CURSOR" mode="OUT"
+			resultMap="CashStockResultMap" />
+	</parameterMap> 
+
+    <select id="selectCashStock" parameterMap="selectCashStockMap"
+		statementType="CALLABLE">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	
+
+	<insert id="insertCashStock" parameterType="CashStock">
+		insert into cash_stock
+		values(#{CashStockCode},#{FundCode},#{CashBlance},
+		#{CashAccountCode},#{StatisticDate},#{PeriodFlag},#{CashDesc})
+	</insert>
+
+	<update id="updateCashStock" parameterType="CashStock">
+		update cash_stock set
+		fund_code=#{FundCode},
+		cash_blance=#{CashBlance},cash_account_code=#{CashAccountCode},
+		cash_statistic_date=#{StatisticDate},cash_period_flag=#{PeriodFlag},
+		cash_stock=#{CashDesc} 
+		where 
+		cash_stock_code=#{CashStockCode}
+	</update>
+
+	<delete id="deleteCashStock" parameterType="String">
+		delete from cash_stock where cash_stock_code = #{CashStockCode}
+	</delete>
+	
+	<!-- 通过编号一条查询数据 -->
+	<select id="selectOneByCode" parameterType="STRING" resultMap="CashStockResultMap">
+		select * from cash_stock where cash_stock_code = #{CashStockCode}
+	</select>
+</mapper>

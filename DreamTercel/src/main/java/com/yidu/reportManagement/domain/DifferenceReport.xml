@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.reportManagement.dao.DifferenceReportDao">
+    <parameterMap type="map" id="selectDifferenceReportInMap">
+        <parameter property="fundCode"/>
+        <parameter property="strDealDate"/>
+    </parameterMap>
+	<select id="selectDifferenceReport" parameterMap="selectDifferenceReportInMap" resultType="DifferenceReport">
+		select lc.security_type as securityType,lc.exchange_name as exchangeName, nvl(lc.deal_total_price,0) as lcTotalPrice,
+		nvl(lr.deal_total_price,0) as lrTotalPrice,nvl(lr.deal_total_price,0)-nvl(lc.deal_total_price,0) as settleMoney,
+		nvl(lr.stamp_duty,0)+nvl(lc.stamp_duty,0) as stampDuty,
+		nvl(lr.management_fee,0)+nvl(lc.management_fee,0) as managementFee ,
+		nvl(lr.transfer_fee,0)+nvl(lc.transfer_fee,0) as transferFee ,
+		nvl(lr.commission_fee,0)+nvl(lc.commission_fee,0) as commissionFee ,
+		nvl(lr.brokerage_fee,0)+nvl(lc.brokerage_fee,0) as brokerageFee,
+		nvl(lr.security_interest,0)+nvl(lc.security_interest,0) as securityInterest,
+		nvl(lr.deal_total_price,0)-nvl(lc.deal_total_price,0)-(nvl(lr.stamp_duty,0)+nvl(lc.stamp_duty,0))-
+		(nvl(lr.management_fee,0)+nvl(lc.management_fee,0))-(nvl(lr.transfer_fee,0)+nvl(lc.transfer_fee,0))-
+		(nvl(lr.commission_fee,0)+nvl(lc.commission_fee,0))-(nvl(lr.brokerage_fee,0)+nvl(lc.brokerage_fee,0))-
+		(nvl(lr.security_interest,0)+nvl(lc.security_interest,0)) as shiJiMoney from (
+		select fund_code,exchange_name,security_type,sum(nvl(deal_total_price,0)) as deal_total_price,
+		sum(nvl(stamp_duty,0)) as stamp_duty,sum(nvl(management_fee,0)) as management_fee,
+		sum(nvl(transfer_fee,0)) as transfer_fee,sum(nvl(commission_fee,0)) as commission_fee,
+		sum(nvl(brokerage_fee,0)) as brokerage_fee ,sum(nvl(security_interest,0)) as security_interest from (
+		select * from DEAL_DATA deal left join security secu on deal.SECURITY_CODE=secu.SECURITY_CODE 
+		where deal.deal_flag=-1 and deal.DEAL_DATE=TO_DATE(#{strDealDate},'yyyy-MM-dd') and deal.FUND_CODE=#{fundCode})
+		group by fund_code,exchange_name,security_type) lc
+		full join 
+		(select fund_code,exchange_name,security_type,sum(nvl(deal_total_price,0)) as deal_total_price,
+		sum(nvl(stamp_duty,0)) as stamp_duty,sum(nvl(management_fee,0)) as management_fee,
+		sum(nvl(transfer_fee,0)) as transfer_fee,sum(nvl(commission_fee,0)) as commission_fee,
+		sum(nvl(brokerage_fee,0)) as brokerage_fee ,sum(nvl(security_interest,0)) as security_interest from (
+		select * from DEAL_DATA deal left join security secu on deal.SECURITY_CODE=secu.SECURITY_CODE
+		where deal.deal_flag=1  and deal.DEAL_DATE=TO_DATE(#{strDealDate},'yyyy-MM-dd') and deal.FUND_CODE=#{fundCode})
+		group by fund_code,exchange_name,security_type) lr
+		on lc.fund_code=lr.fund_code
+	</select>
+	 <select id="selectDifferenceReportCount" parameterMap="selectDifferenceReportInMap" resultType="integer">
+	     select count(*) from 
+	     (select lc.security_type as securityType,lc.exchange_name as exchangeName, nvl(lc.deal_total_price,0) as lcTotalPrice,
+		nvl(lr.deal_total_price,0) as lrTotalPrice,nvl(lr.deal_total_price,0)-nvl(lc.deal_total_price,0) as settleMoney,
+		nvl(lr.stamp_duty,0)+nvl(lc.stamp_duty,0) as stampDuty,
+		nvl(lr.management_fee,0)+nvl(lc.management_fee,0) as managementFee ,
+		nvl(lr.transfer_fee,0)+nvl(lc.transfer_fee,0) as transferFee ,
+		nvl(lr.commission_fee,0)+nvl(lc.commission_fee,0) as commissionFee ,
+		nvl(lr.brokerage_fee,0)+nvl(lc.brokerage_fee,0) as brokerageFee,
+		nvl(lr.security_interest,0)+nvl(lc.security_interest,0) as securityInterest,
+		nvl(lr.deal_total_price,0)-nvl(lc.deal_total_price,0)-(nvl(lr.stamp_duty,0)+nvl(lc.stamp_duty,0))-
+		(nvl(lr.management_fee,0)+nvl(lc.management_fee,0))-(nvl(lr.transfer_fee,0)+nvl(lc.transfer_fee,0))-
+		(nvl(lr.commission_fee,0)+nvl(lc.commission_fee,0))-(nvl(lr.brokerage_fee,0)+nvl(lc.brokerage_fee,0))-
+		(nvl(lr.security_interest,0)+nvl(lc.security_interest,0)) as shiJiMoney from (
+		select fund_code,exchange_name,security_type,sum(nvl(deal_total_price,0)) as deal_total_price,
+		sum(nvl(stamp_duty,0)) as stamp_duty,sum(nvl(management_fee,0)) as management_fee,
+		sum(nvl(transfer_fee,0)) as transfer_fee,sum(nvl(commission_fee,0)) as commission_fee,
+		sum(nvl(brokerage_fee,0)) as brokerage_fee ,sum(nvl(security_interest,0)) as security_interest from (
+		select * from DEAL_DATA deal left join security secu on deal.SECURITY_CODE=secu.SECURITY_CODE 
+		where deal.deal_flag=-1 and deal.DEAL_DATE=TO_DATE(#{strDealDate},'yyyy-MM-dd') and deal.FUND_CODE=#{fundCode})
+		group by fund_code,exchange_name,security_type) lc
+		full join 
+		(select fund_code,exchange_name,security_type,sum(nvl(deal_total_price,0)) as deal_total_price,
+		sum(nvl(stamp_duty,0)) as stamp_duty,sum(nvl(management_fee,0)) as management_fee,
+		sum(nvl(transfer_fee,0)) as transfer_fee,sum(nvl(commission_fee,0)) as commission_fee,
+		sum(nvl(brokerage_fee,0)) as brokerage_fee ,sum(nvl(security_interest,0)) as security_interest from (
+		select * from DEAL_DATA deal left join security secu on deal.SECURITY_CODE=secu.SECURITY_CODE
+		where deal.deal_flag=1  and deal.DEAL_DATE=TO_DATE(#{strDealDate},'yyyy-MM-dd') and deal.FUND_CODE=#{fundCode})
+		group by fund_code,exchange_name,security_type) lr
+		on lc.fund_code=lr.fund_code)
+	 </select>
+</mapper>

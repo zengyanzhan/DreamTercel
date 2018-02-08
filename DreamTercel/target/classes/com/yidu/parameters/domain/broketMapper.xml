@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">      
+<!-- namespace 指明SQL语句映射针对于实体对象 -->
+<mapper namespace="com.yidu.parameters.dao.BroketDao">
+	<!-- 参数map类型 -->
+	<parameterMap type="java.util.Map" id="selectBroketInMap">
+		<parameter property="tableName" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="qualification" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="page" mode="INOUT" jdbcType="INTEGER"/>
+		<parameter property="rows" mode="INOUT" jdbcType="INTEGER"/>
+		<parameter property="pageTotal" mode="OUT"  jdbcType="INTEGER"/>
+		<parameter property="rowsTotal" mode="OUT"  jdbcType="INTEGER"/>
+		<parameter property="orderColumn" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="orderStyle" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="cursor" mode="OUT" resultMap="selectBroketOutMap" jdbcType="CURSOR"/>
+	</parameterMap>
+	<!-- 返回类型 -->
+	<resultMap type="Broket" id="selectBroketOutMap">
+		<id column="broker_code" property="brokerCode"/>
+		<result column="broker_name" property="brokerName"/>
+		<result column="broker_explain" property="brokerExplain"/>
+		<result column="broker_desc" property="brokerDesc"/>
+	</resultMap>
+	<select id="selectBroket" parameterMap="selectBroketInMap" statementType="CALLABLE">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<select id="selectBroketById" parameterType="String" resultType="Broket">
+		select broker_code as brokerCode,broker_name as brokerName,broker_explain as brokerExplain,broker_desc as brokerDesc from broker
+		where broker_code=#{brokerCode}
+	</select>
+	<insert id="insertBroket" parameterType="Broket">
+		insert into broker(broker_code,broker_name,broker_explain,broker_desc) 
+		values (#{brokerCode},#{brokerName},#{brokerExplain},#{brokerDesc})
+	</insert>
+	<update id="updateBroket" parameterType="Broket">
+		update broker set broker_name=#{brokerName},broker_explain=#{brokerExplain},broker_desc=#{brokerDesc}  
+		where broker_code=#{brokerCode}
+	</update>
+	<delete id="deleteBroket"  parameterType="Broket">
+		delete from broker where broker_code in (${brokerCode})
+	</delete>
+</mapper>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.dayEnd.dao.CashAccrualDao">
+	<resultMap type="CashAccrual" id="cashAccrualResultMap">
+		<!-- property 实体类属性名 column 表的字段名 -->
+		<result property="cashAccountBankName" column="cash_account_bank_name" />
+		<result property="cashAccountBankCard" column="cash_account_bank_card" />
+		<result property="fundCode" column="fund_code" />
+		<result property="cashAccountCode" column="cash_account_code" />
+		<result property="cashBlance" column="cash_blance" />
+		<result property="cashStatisticDate" column="cash_statistic_date" />
+		<result property="cashAccountDepositType" column="cash_account_deposit_type" />
+		<result property="cashAccountCardRate" column="cash_account_card_rate" />
+		<result property="cashAccountInterestPeriod" column="cash_account_interest_period" />
+	</resultMap>
+
+	<parameterMap type="java.util.Map" id="selectCashAccrualParameterMap">
+		<parameter property="tableName" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="qualification" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="page" jdbcType="INTEGER" mode="INOUT" />
+		<parameter property="rows" jdbcType="INTEGER" mode="INOUT" />
+		<parameter property="pageTotal" jdbcType="INTEGER" mode="OUT" />
+		<parameter property="rowsTotal" jdbcType="INTEGER" mode="OUT" />
+		<parameter property="orderColumn" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="orderStyle" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="cashAccrualList" jdbcType="CURSOR"
+			mode="OUT" resultMap="cashAccrualResultMap" />
+	</parameterMap>
+	<!-- 按条件查询和查询所有 -->
+	<select id="selectCashAccrual" statementType="CALLABLE"
+		parameterMap="selectCashAccrualParameterMap">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<insert id="insertCashAccrual" parameterType="CashArap">
+		insert into
+		cash_arap
+		values(#{cashArapCode},#{cashAccountCode},#{fundCode},#{cashArapType},#{moneyDirection},#{money},#{cashStatisticDate},#{cashArapDesc})
+	</insert>
+	<select id="selectByIdCashAccrual" parameterType="string" resultMap="cashAccrualResultMap">
+		select * from (
+		(select * from cash_account) a join
+		(select * from cash_stock)b on a.cash_account_code=b.cash_account_code
+		)where 1=1 and a.cash_account_code=#{cashAccountCode} and
+		b.cash_statistic_date=To_date(#{businessDateWhere},'YYYY-MM-DD')
+	</select>
+</mapper>

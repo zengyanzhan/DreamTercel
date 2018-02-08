@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.dayEnd.dao.TwoCostDao">
+	<resultMap type="TwoCost" id="CostResultMap">
+		<result property="trusteeCode" column="trustee_code" />
+		<result property="trusteeName" column="trustee_name" />
+		<result property="trusteeAddres" column="trustee_addres" />
+		<result property="trusteeCompany" column="trustee_company" />
+		<result property="trusteePhone" column="trustee_phone" />
+		<result property="trusteeFee" column="trustee_fee" />
+		<result property="trusteeDesc" column="trustee_desc" />
+		<result property="managerCode" column="manager_dode" />
+		<result property="managerName" column="manager_name" />
+		<result property="managerAge" column="manager_age" />
+		<result property="managerSex" column="manager_sex" />
+		<result property="managerCompany" column="manager_company" />
+		<result property="managerPhone" column="manager_phone" />
+		<result property="managerFee" column="manager_fee" />
+		<result property="managerDesc" column="manager_desc" />
+		<result property="fundCode" column="fund_code" />
+		<result property="fundName" column="fund_name" />
+		<result property="cashAccountCode" column="cash_account_code" />
+		<result property="fundDesc" column="fund_desc" />
+		<result property="fundScale" column="fund_scale" />
+		<result property="manageRate" column="manage_rate" />
+		<result property="trusteeRate" column="trustee_rate" />
+		<result property="initFundValue" column="init_fund_value" />
+		<result property="fundType" column="fund_type" />
+		<result property="feePeriodDay" column="fee_period_day" />
+		<result property="establishDate" column="establish_date" />
+		<result property="cashAccountBankCard" column="cash_account_bank_card" />
+		<result property="cashAccountName" column="cash_account_name" />
+		<result property="cashAccountBankName" column="cash_account_bankName" />
+		<result property="cashAccountDesc" column="cash_account_desc" />
+		<result property="cashAccountDepositType" column="cash_account_deposit_type" />
+		<result property="cashAccountCardRate" column="cash_account_card_rate" />
+		<result property="cashAccountInterestPeriod" column="cash_account_interest_period" />
+		<result property="cashAccountStartTime" column="cash_account_start_time" />
+		<result property="cashAccountEndTime" column="cash_account_end_time" />
+		<result property="netValueCode" column="net_value_code" />
+		<result property="projectName" column="project_name" />
+		<result property="projectCode" column="project_code" />
+		<result property="treeCode" column="tree_code" />
+		<result property="treeFatherCode" column="tree_father_code" />
+		<result property="quantity" column="quantity" />
+		<result property="price" column="price" />
+		<result property="costing" column="costing" />
+		<result property="marketValue" column="market_value" />
+		<result property="valueAdd" column="value_add" />
+		<result property="statisticDate" column="statistic_date" />
+	</resultMap>
+	<select id="selectTwoCost" resultMap="CostResultMap">
+		select distinct * from
+		(select * from fund where 1=1 ) f
+		join
+		(select * from manager )g on f.manager_code =g.manager_code
+		join
+		(select * from trustee)t on f.trustee_code=t.trustee_code
+		join
+		(select * from net_value) n on f.fund_code=n.fund_code
+		join (select * from cash_account) a on f.cash_account_code
+		=a.cash_account_code
+		where 1=1
+		and n.project_name ='资产净值'  ${sqlWhere}
+	</select>
+	<select id="selectByIdTwoCost" parameterType="map" resultMap="CostResultMap">
+	    select distinct * from
+		(select * from fund where 1=1 ) f
+		join
+		(select * from manager )g on f.manager_code =g.manager_code
+		join
+		(select * from trustee)t on f.trustee_code=t.trustee_code
+		join
+		(select * from net_value) n on f.fund_code=n.fund_code
+		join (select * from cash_account) a on f.cash_account_code
+		=a.cash_account_code
+		where f.cash_account_code ='${cashAccountCode}'
+	</select>
+	<insert id="insertTwoCost" parameterType="CashArap">
+	    insert into cash_arap
+		values(#{cashArapCode},#{cashAccountCode},#{fundCode},#{cashArapType},#{moneyDirection},#{money},#{businessDate},#{cashArapDesc})
+	</insert>
+</mapper>

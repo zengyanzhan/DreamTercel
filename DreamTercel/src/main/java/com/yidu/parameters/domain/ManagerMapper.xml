@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace 指明SQL语句映射针对于实体对象 -->
+<mapper namespace="com.yidu.parameters.dao.ManagerDao">
+    
+	<parameterMap type="map" id="selectMapIn">
+		<parameter property="tableName" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="qualification" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="page" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="rows" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="pageTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="rowsTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="orderColumn" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="orderStyle" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="cursor" mode="OUT" jdbcType="CURSOR"
+			resultMap="ManagerMap" />
+	</parameterMap>
+	
+	<resultMap type="Manager" id="ManagerMap">
+	    <id property="managerCode" column="manager_code"/>
+	    <result property="managerName" column="manager_name" />
+		<result property="managerAge" column="manager_age" />
+		<result property="managerSex" column="manager_sex" />
+		<result property="managerCompany" column="manager_company" />
+		<result property="managerPhone" column="manager_phone" />
+		<result property="managerFee" column="manager_fee" />
+		<result property="managerDesc" column="manager_desc" />
+	</resultMap>
+    <!-- 查询 -->
+<select id="selectManagerRow" parameterMap="selectMapIn" statementType="CALLABLE">
+       call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+</select>
+<!-- 新增 -->
+<insert id="insertManager" parameterType="Manager">
+    insert into manager values(#{managerCode},#{managerName},#{managerAge},#{managerSex},#{managerCompany},#{managerPhone},#{managerFee},#{managerDesc})
+</insert>
+<!-- 修改 -->
+	<update id="updateManager" parameterType="Manager">
+	  update manager set  manager_name=#{managerName},manager_age=#{managerAge},manager_sex=#{managerSex},manager_company=#{managerCompany},
+	  manager_phone=#{managerPhone},manager_fee=#{managerFee},manager_desc=#{managerDesc} where manager_code=#{managerCode}
+	</update>
+	<!-- 删除 -->
+	<delete id="deleteManager" parameterType="Manager">
+	    delete from manager where
+		manager_code in (${managerCode})
+	    
+	</delete>
+	<!-- 通过一条查询数据 -->
+	<select id="selectManagerByCode" parameterType="Manager" resultMap="ManagerMap">
+	    		select * from manager where manager_code = #{managerCode}
+	</select>
+</mapper>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace 指明SQL语句映射针对于实体对象 该对象是库存管理的证券库存dao接口类 -->
+<mapper namespace="com.yidu.stockControl.dao.SecurityStockDao">
+	<parameterMap type="java.util.Map" id="selectSecurityStockMap">
+		<parameter property="tableName" javaType="String" jdbcType="VARCHAR"
+			mode="IN" />
+		<parameter property="qualification" javaType="String"
+			jdbcType="VARCHAR" mode="IN" />
+		<parameter property="page" javaType="INTEGER" jdbcType="INTEGER"
+			mode="INOUT" />
+		<parameter property="rows" javaType="INTEGER" jdbcType="INTEGER"
+			mode="INOUT" />
+		<parameter property="pageTotal" javaType="INTEGER" jdbcType="INTEGER"
+			mode="OUT" />
+		<parameter property="rowsTotal" javaType="INTEGER" jdbcType="INTEGER"
+			mode="OUT" />
+		<parameter property="orderColumn" javaType="String"
+			jdbcType="VARCHAR" mode="IN" />
+		<parameter property="orderStyle" javaType="String" jdbcType="VARCHAR"
+			mode="IN" />
+		<parameter property="cursor" jdbcType="CURSOR" mode="OUT"
+			resultMap="securityStockResultMap" />
+	</parameterMap>
+	<resultMap type="SecurityStock" id="securityStockResultMap">
+		<id property="code" column="security_stock_code" />
+		<result property="securityCode" column="security_code" />
+		<result property="fundCode" column="fund_code" />
+		<result property="accountCode" column="cash_account_code" />
+		<result property="securityName" column="security_name" />
+		<result property="securityType" column="security_type" />
+		<result property="securityUtilCost" column="security_util_cost" />
+		<result property="securityQuantity" column="security_quantity" />
+		<result property="totalMoney" column="security_total_money" />
+		<result property="datetimeInner" column="security_statistics_date" />
+	</resultMap>
+	<select id="selectSecurityStock" parameterMap="selectSecurityStockMap"
+		statementType="CALLABLE">
+		call
+		pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<!-- 证券库存返回集 -->
+	<resultMap type="SecurityStock" id="selectSecurityStockByCodeResultMap">
+		<id property="code" column="security_stock_code" />
+		<result property="securityCode" column="security_code" />
+		<result property="fundCode" column="fund_code" />
+		<result property="accountCode" column="cash_account_code" />
+		<result property="securityName" column="security_name" />
+		<result property="securityType" column="security_type" />
+		<result property="securityUtilCost" column="security_util_cost" />
+		<result property="securityQuantity" column="security_quantity" />
+		<result property="totalMoney" column="security_total_money" />
+		<result property="datetimeInner" column="security_statistics_date" />
+		<result property="securityDesc" column="security_stock_desc" />
+		<result property="fundName" column="fund_name" />
+		<result property="periodFlag" column="security_period_flag" />
+	</resultMap>
+	<!-- 按照条件查询证券库存数据 -->
+	<select id="selectSecurityStockByCode" parameterType="String"
+		resultMap="selectSecurityStockByCodeResultMap">
+		select g.*,security.security_name from (select
+		ss.*,fund.fund_name from (select * from security_stock where
+		security_stock_code=#{code}) ss left join fund on
+		ss.fund_code=fund.fund_code) g left join security on
+		g.security_code=security.security_code
+	</select>
+	<!-- 增加证券库存数据 -->
+	<insert id="insertSecurityStock" parameterType="SecurityStock">
+		insert into
+		security_stock
+		values(#{code},#{securityCode},#{fundCode},#{accountCode},#{securityName},#{securityType},
+		#{securityUtilCost},#{securityQuantity},#{totalMoney},#{datetimeInner},#{periodFlag},#{securityDesc})
+	</insert>
+	<!-- 修改证券库存选中的数据 -->
+	<update id="updateSecurityStock" parameterType="SecurityStock">
+		update
+		security_stock
+		set
+		security_code=#{securityCode},fund_code=#{fundCode},cash_account_code=#{accountCode},security_name=#{securityName},
+		security_type=#{securityType},security_util_cost=#{securityUtilCost},security_quantity=#{securityQuantity},security_total_money=#{totalMoney},
+		security_statistics_date=#{datetimeInner},security_period_flag=#{periodFlag},security_stock_desc=#{securityDesc}
+		where security_stock_code=#{code}
+	</update>
+	<!-- 删除证券库存数据 批量删除 -->
+	<delete id="deleteSecurityStock" parameterType="java.util.Map">
+		delete from
+		security_stock where security_stock_code in
+		<foreach collection="code" index="index" item="item" open="("
+			separator="," close=")">#{item}</foreach>
+	</delete>
+	<!-- 查询证券信息 -->
+	<resultMap type="Security" id="securityResultMap">
+		<id property="securityCode" column="security_code" />
+		<result property="securityName" column="security_name" />
+	</resultMap>
+	<select id="selectSecurity" parameterType="String" resultMap="securityResultMap">
+		select se.* from security se,security_stock ss where
+		se.security_code=ss.security_code
+		<if test="fundCode != null">
+			and ss.fund_code=#{fundCode}
+		</if>
+	</select>
+</mapper>

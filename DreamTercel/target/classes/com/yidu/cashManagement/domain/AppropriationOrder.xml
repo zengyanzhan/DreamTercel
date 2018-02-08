@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.cashManagement.dao.AppropriationOrderDao">
+	<resultMap type="AppropriationOrder" id="orderResultMap">
+		<result property="code" column="appropriationOrderCode" />
+		<result property="payCode" column="payCashAccountCode" />
+		<result property="payName" column="payAccountName" />
+		<result property="payBank" column="payOpenAccountBank" />
+		<result property="cashCode" column="collectCashAccountCode" />
+		<result property="cashName" column="collectAccountName" />
+		<result property="cashBank" column="collectOpenAccountBank" />
+		<result property="orderDate" column="orderDate" />
+		<result property="toAccountDate" column="toAccountDate" />
+		<result property="money" column="appropriationMoney" />
+		<result property="allotFlag" column="allotFlag" />
+		<result property="headerDetails" column="headerDetails" />
+		<result property="headUp" column="headUp" />
+		<result property="auditPerson" column="auditPerson" />
+		<result property="desc" column="apprpDesc" />
+	</resultMap>
+
+	<parameterMap type="java.util.Map" id="selectOrderInMap">
+		<parameter property="tabName" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="qualification" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="page" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="rows" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="pageTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="rowsTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="orderColumn" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="orderStyle" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="cursor" jdbcType="CURSOR" mode="OUT"
+			resultMap="orderResultMap" />
+	</parameterMap>
+
+	<select id="selectAppripriationOrder" parameterMap="selectOrderInMap"
+		statementType="CALLABLE">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+
+	<insert id="insertApproOrder" parameterType="AppropriationOrder">
+	  insert into appropriationOrder values (#{code},#{payCode},#{payName},#{payBank},#{cashCode},#{cashName},#{cashBank},#{orderDate},#{toAccountDate},#{money},#{allotFlag},#{headerDetails},#{headUp},#{auditPerson},#{desc})  
+	    
+	</insert>
+	
+	<update id="updateApproOrder" parameterType="AppropriationOrder">
+	    update appropriationOrder set appropriationMoney=#{money},orderDate=#{orderDate},toAccountDate=#{toAccountDate},allotFlag=#{allotFlag} where  appropriationOrderCode=#{code}
+	</update>
+	
+	<delete id="deleteApproOrder" parameterType="AppropriationOrder">
+	    delete from appropriationOrder where appropriationOrderCode in (${code})
+	</delete>
+	
+	<select id="selectApproCode" parameterType="String"
+		resultMap="orderResultMap">
+		select * from appropriationOrder where appropriationOrderCode=#{code}
+	</select>
+</mapper>

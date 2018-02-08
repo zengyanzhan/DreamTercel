@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.stockControl.dao.TaStockDao">
+	<select id="selectTaStocks" statementType="CALLABLE" parameterMap="selectTaStockParameterMap">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<parameterMap type="map" id="selectTaStockParameterMap">
+		<parameter property="tableName"  jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="qualification" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="page" jdbcType="INTEGER" mode="INOUT"/>
+		<parameter property="rows" jdbcType="INTEGER" mode="INOUT"/>
+		<parameter property="pageTotal" jdbcType="INTEGER" mode="OUT"/>
+		<parameter property="rowsTotal" jdbcType="INTEGER"  mode="OUT"/>
+		<parameter property="orderColumn" jdbcType="VARCHAR"  mode="IN"/>
+		<parameter property="orderStyle" jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="taStockList" jdbcType="CURSOR" mode="OUT" resultMap="selectTaStockResultMap"/>
+	</parameterMap>
+	<resultMap type="TaStock" id="selectTaStockResultMap">
+		<id column="ta_stock_code" property="taStockCode"/>
+		<result column="fund_code" property="fundCode"/>
+		<result column="ta_stock_quantity" property="taStockQuantity"/>
+		<result column="ta_stock_money" property="taStockMoney"/>
+		<result column="statistic_date" property="statisticDate"/>
+		<result column="period_flag" property="periodFlag"/>
+		<result column="ta_stock_desc" property="taStockDesc"/>
+	</resultMap>
+	
+	<!-- 删除 -->
+	<delete id="deleteTaStockByTaStockId" parameterType="STRING">
+		 delete  from  ta_stock  where  ta_stock_code=#{taStockCode}
+	</delete>
+	<!-- 修改的sql语句 -->
+	<update id="updateTaStock"  parameterType="com.yidu.stockControl.domain.TaStock">
+		update ta_stock set fund_code=#{fundCode},ta_stock_quantity=#{taStockQuantity},ta_stock_money=#{taStockMoney},
+		statistic_date=#{statisticDate},period_flag=#{periodFlag},ta_stock_desc=#{taStockDesc} where ta_stock_code=#{taStockCode}
+	</update>
+	<insert id="insertTaStock"  parameterType="com.yidu.stockControl.domain.TaStock">
+		insert into ta_stock values(#{taStockCode},#{fundCode},#{taStockQuantity},#{taStockMoney},#{statisticDate},#{periodFlag},#{taStockDesc})
+	</insert>
+	<select id="selectTaStockById" parameterType="STRING" resultMap="selectTaStockResultMap">
+		select  *  from ta_stock where ta_stock_code=#{taStockCode}
+	</select>
+</mapper>

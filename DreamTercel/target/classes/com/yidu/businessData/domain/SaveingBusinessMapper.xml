@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.businessData.dao.SaveingBusinessDao">
+	<resultMap type="SaveingBusiness" id="SBResultMap">
+		<result property="savingCode" column="saveing_business_code"/>
+		<result property="fundCode" column="fund_code"/>
+		<result property="outCashAccountCode" column="out_cash_account_code"/>
+		<result property="inCashAccountCode" column="in_cash_account_code"/>
+		<result property="businessDate" column="business_date"/>
+		<result property="businessType" column="business_type"/>
+		<result property="savingMoney" column="saving_money"/>
+		<result property="savingInterest" column="saving_interest"/>
+		<result property="savingEndDate" column="saving_end_date"/>
+		<result property="flag" column="saving_flag"/>
+		<result property="desc" column="saveing_business_desc"/>
+	</resultMap>
+	<parameterMap type="java.util.Map" id="selectSBInMap">
+		<parameter property="tabName" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="qualification" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="page" mode="INOUT" jdbcType="INTEGER"/>
+		<parameter property="rows" mode="INOUT" jdbcType="INTEGER"/>
+		<parameter property="pageTotal" mode="OUT" jdbcType="INTEGER"/>
+		<parameter property="rowsTotal" mode="OUT" jdbcType="INTEGER"/>
+		<parameter property="orderColumn" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="orderStyle" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="cursor" jdbcType="CURSOR" mode="OUT"
+			resultMap="SBResultMap"/>
+	</parameterMap>
+	<select id="selectSaveingBusiness" parameterMap="selectSBInMap"
+		statementType="CALLABLE">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<insert id="insertSaveingBusiness" parameterType="SaveingBusiness">
+	   insert into saveing_business values (#{savingCode},#{fundCode},#{outCashAccountCode}
+	   ,#{inCashAccountCode}
+	   ,#{businessDate},#{businessType},#{savingMoney},
+	   #{savingInterest},#{savingEndDate}, #{flag},#{desc}) 
+	</insert>
+	<update id="updateSaveingBusiness" parameterType="SaveingBusiness">
+	    update saveing_business set saving_flag=#{flag} where saveing_business_code=#{savingCode}
+	</update>
+	<delete id="deleteSaveingBusiness" parameterType="SaveingBusiness">
+	    delete from saveing_business where saveing_business_code in(${savingCode})
+	</delete>
+	<select id="selectSaveingBusinessByCode" parameterType="String" resultMap="SBResultMap">
+	  select * from saveing_business where saveing_business_code = #{SavingCode}
+	</select>
+</mapper>

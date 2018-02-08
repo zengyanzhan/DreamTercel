@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.dayEnd.dao.NetValueDao">
+	<!-- 按条件查询和查询所有净值统计表的数据 -->
+	<select id="selectNetValues" statementType="CALLABLE"
+		parameterMap="selectNetValueMap">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<!-- 参数 -->
+	<parameterMap type="map" id="selectNetValueMap">
+		<parameter property="tableName" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="qualification" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="page" jdbcType="INTEGER" mode="INOUT" />
+		<parameter property="rows" jdbcType="INTEGER" mode="INOUT" />
+		<parameter property="pageTotal" jdbcType="INTEGER" mode="OUT" />
+		<parameter property="rowsTotal" jdbcType="INTEGER" mode="OUT" />
+		<parameter property="orderColumn" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="orderStyle" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="netValueList" jdbcType="CURSOR" mode="OUT" resultMap="selectNetValueResultMap" />
+	</parameterMap>
+	<!-- 返回结果 -->
+	<resultMap type="NetValue" id="selectNetValueResultMap">
+		<id column="net_value_code" property="treeFatherCode" />
+		<result column="fund_code" property="fundCode" />
+		<result column="project_name" property="projectName" />
+		<result column="project_code" property="projectCode" />
+		<result column="quantity" property="quantity" />
+		<result column="price" property="price" />
+		<result column="costing" property="costing" />
+		<result column="market_value" property="marketValue" />
+		<result column="statistic_date" property="statisticDate" />
+		<result column="value_add" property="valueAdd" />
+		<result column="tree_code" property="treeCode" />
+		<result column="tree_father_code" property="treeFatherCode" />
+	</resultMap>
+	<!-- 根据登录的基金编号删除净值统计 -->
+	<delete id="deleteNetValue" parameterType="NetValue">
+		delete from net_value
+		where 1=1 and fund_code=#{fundCode} and
+		statistic_date=to_date(#{statisticDateWhere},'yyyy-MM-dd')
+	</delete>
+	<!-- 增加净值统计的方法 -->
+	<insert id="insertNetValue" parameterType="NetValue">
+	    insert into net_value values
+		(#{netValueCode},#{fundCode},#{projectName},#{projectCode},
+		#{quantity},#{price},#{costing},#{marketValue},
+		to_date(#{statisticDateWhere},'yyyy-MM-dd'),
+		#{valueAdd},#{treeCode},#{treeFatherCode})  
+	</insert>
+	<!--  
+		一、查询证券的详细信息证券类型=1是股票，证券类型=2是债券
+			1、项目代码
+			2、项目名称
+			3、数量
+			4、行情价格
+			5、成本
+			6、市值=行情*数量
+			7、估值增值=市值-成本
+	-->
+	<select id="selectSecurityDetail" parameterType="NetValue" resultType="NetValue">
+		select ss.security_name as projectName,
+		ss.security_code as projectCode,
+		nvl(ss.security_quantity,0) as quantity,
+		nvl(pd.pd_closingPrice,0) as price,
+		nvl((ss.security_util_cost * ss.security_quantity),0) as costing,
+		nvl((pd.pd_closingPrice * ss.security_quantity),0) as marketValue,
+		nvl((pd.pd_closingPrice * ss.security_quantity- ss.security_util_cost * ss.security_quantity),0) as valueAdd
+		from
+		(select * from security_stock where 1=1 and fund_code=#{fundCode} and
+		security_statistics_date=to_date(#{statisticDateWhere},'yyyy-MM-dd') 
+		and security_type=#{securityType})ss
+		join (select * from priceData where 1=1 and
+		pd_enteringDate=to_date(#{enteringDate},'yyyy-MM-dd'))pd on
+		ss.security_code=pd.pd_securityCode
+	</select>
+	<!-- 
+		二、查询所有(债券、股票)的总信息(头部)
+			1、数量
+			2、成本
+			3、市值=行情*数量
+			4、估值增值=市值-成本
+	 -->
+	<select id="selectSecurity" parameterType="NetValue" resultType="NetValue">
+		select sum(nvl(ss.security_quantity,0)) as quantity,
+		sum(nvl((ss.security_util_cost * ss.security_quantity),0)) as costing,
+		sum(nvl((pd.pd_closingPrice * ss.security_quantity),0)) as marketValue,
+		sum(nvl((pd.pd_closingPrice * ss.security_quantity- ss.security_util_cost * ss.security_quantity),0)) as valueAdd
+		from
+		(select * from security_stock where 1=1 and security_type=#{securityType} and
+		fund_code=#{fundCode} and 
+		security_statistics_date=to_date(#{statisticDateWhere},'yyyy-MM-dd'))ss
+		join
+		(select * from priceData where 1=1 and 
+		pd_enteringDate=to_date(#{enteringDate},'yyyy-MM-dd')) pd
+		on ss.security_code=pd.pd_securityCode
+	</select>
+	<!-- 三、查询债券利息 
+			1、成本=总金额*业务状态
+	-->
+	<select id="selectBondLiXi" parameterType="NetValue" resultType="NetValue">
+		select
+		sum(nvl(sas.total_money*sas.business_status,0)) as costing
+		from
+		(select * from security_arap_stock where 1=1 and
+		business_type=3 and fund_code=#{fundCode}
+		and business_date=to_date(#{businessDate},'yyyy-MM-dd')
+		)sas
+		join
+		(select * from security_stock where 1=1 and
+		security_statistics_date=to_date(#{statisticDateWhere},'yyyy-MM-dd')
+		and security_type=2) ss
+		on
+		sas.cash_account_code=ss.cash_account_code
+	</select>
+	<!-- 
+		四、查询证券的总信息
+			1、证券数量
+			2、成本=单价*数量
+			3、市值=收盘价*数量
+			4、估值增值=市值-成本
+	 -->
+	<select id="selectSecurityAll" parameterType="NetValue" resultType="NetValue">
+		select
+		sum(nvl(ss.security_quantity,0)) as quantity,
+		sum(nvl((ss.security_util_cost * ss.security_quantity),0)) as costing,
+		sum(nvl((pd.pd_closingPrice * ss.security_quantity),0)) as marketValue,
+		sum(nvl((pd.pd_closingPrice * ss.security_quantity- ss.security_util_cost * ss.security_quantity),0)) as valueAdd
+		from
+		(select * from security_stock where 1=1 and fund_code=#{fundCode} and
+		security_statistics_date=to_date(#{statisticDateWhere},'yyyy-MM-dd'))ss
+		join
+		(select * from priceData where 1=1 and 
+		pd_enteringDate=to_date(#{enteringDate},'yyyy-MM-dd')) pd
+		on ss.security_code=pd.pd_securityCode
+	</select>
+	<!-- 
+		五、查询每个账户的总和（账户头部）
+			1、项目名称
+			2、项目代码（现金账户code）
+			3、成本（包括存款利息、托管费、管理费、本金）,现金库存的余额
+			4、市值=成本
+			5、现金账户表+现金库存表
+			6、条件（登录时选择的基金编号，cash_statistic_date统计日期）
+	 -->
+	<select id="selectCashAccount" parameterType="NetValue" resultType="NetValue">
+	    select ca.cash_account_name as projectName,
+        ca.cash_account_code as projectCode,
+        nvl(cs.cash_blance,0)  as costing
+		from cash_account ca join 
+		(select * from cash_stock where 1=1 and 
+		fund_code=#{fundCode} 
+		and cash_statistic_date=to_date(#{statisticDateWhere},'yyyy-MM-dd'))cs 
+		on ca.cash_account_code=cs.cash_account_code
+	</select>
+	<!-- 六、查询现金账户的应收应付详情 -->
+	<select id="selectCashAccountDetail" parameterType="NetValue" resultType="NetValue">
+	    select 
+        sum(nvl(total_money*status,0))  as costing
+		from cash_arap_stock where 1=1 and 
+		business_type=#{businessType} and fund_code=#{fundCode}  
+		and business_date=to_date(#{statisticDateWhere},'yyyy-MM-dd') 
+		and cash_account_code=#{cashAccountCode}
+		group by  fund_code,business_date
+	</select>
+	<!-- 七、查询证券应收应付的详情 -->
+	<select id="selectSecurityArapDetail" parameterType="NetValue" resultType="NetValue">
+	    select 
+        sum(nvl(total_money*business_status,0))  as costing
+		from security_arap_stock where 1=1 
+		and business_type=2 and fund_code=#{fundCode} 
+		and business_date=to_date(#{statisticDateWhere},'yyyy-MM-dd') 
+		and cash_account_code=#{cashAccountCode} 
+		group by  fund_code,business_date
+	</select>
+	<!-- 八、查询TA交易数量 -->
+	<select id="selectTaQuantity" parameterType="NetValue" resultType="INTEGER">
+		select nvl(ta_stock_quantity,0) as quantity from ta_stock
+		where 1=1 and fund_code=#{fundCode}  
+		and statistic_date=to_date(#{statisticDateWhere},'yyyy-MM-dd')   
+	</select>
+	
+</mapper>

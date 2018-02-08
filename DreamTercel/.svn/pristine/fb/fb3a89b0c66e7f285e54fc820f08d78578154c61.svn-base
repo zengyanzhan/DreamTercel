@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace 指明SQL语句映射针对于实体对象 -->
+<mapper namespace="com.yidu.system.dao.HoildayXiaoDao">
+
+	<resultMap type="HoildayXiao" id="hoildayXiaoMap" >
+		<id property="hCode" column="holidayId" />
+		<result property="hDate" column="holidayDate" />
+		<result property="hYear" column="holidayYear" />
+		<result property="hMonth" column="holidayMonth" />
+		<result property="hDay" column="holidayDay" />
+		<result property="hDesc" column="hoildDesc" />
+	</resultMap>
+	<!-- 通过用户名查询父功能 -->
+	<select id="selectHoildayXiao" parameterType="INTEGER" resultMap="hoildayXiaoMap">
+		SELECT * FROM t_holiday where 1=1 and holidayYear  =#{date}
+	</select>
+	<select id="selectHoildayBydate" parameterType="string" resultMap="hoildayXiaoMap">
+		SELECT * FROM t_holiday where 1=1 and holidayDate  =to_date(#{0},'YYYY-MM-DD') 
+	</select>
+	<parameterMap type="map" id="insertMap">
+		<parameter property="t_holidayDate" jdbcType="DATE" mode="IN"/>
+		<parameter property="t_holidayYear" jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="t_holidayMonth" jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="t_holidayDay" jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="t_hoildDesc" jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="t_flag" jdbcType="INTEGER" mode="OUT"/>
+	</parameterMap>
+	<insert id="insertHoildayXiao" parameterMap="insertMap" statementType="CALLABLE">
+		call insert_t_holiday(?,?,?,?,?,?)
+	
+	</insert>
+	<delete id="deleteHoildayXiao" parameterType="String">
+	
+		delete from t_holiday where 1=1 and holidayDate =to_date(#{date},'YYYY-MM-DD')
+	</delete>
+</mapper>

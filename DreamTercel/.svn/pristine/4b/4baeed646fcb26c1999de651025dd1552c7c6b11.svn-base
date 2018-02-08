@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"  
+ xmlns:context="http://www.springframework.org/schema/context"  
+ xmlns:p="http://www.springframework.org/schema/p"  
+ xmlns:mvc="http://www.springframework.org/schema/mvc"  
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns:tx="http://www.springframework.org/schema/tx" 
+ xmlns:aop="http://www.springframework.org/schema/aop" 
+ xsi:schemaLocation="http://www.springframework.org/schema/beans  
+      http://www.springframework.org/schema/beans/spring-beans.xsd  
+      http://www.springframework.org/schema/context  
+      http://www.springframework.org/schema/context/spring-context.xsd  
+      http://www.springframework.org/schema/mvc  
+      http://www.springframework.org/schema/mvc/spring-mvc.xsd
+      http://www.springframework.org/schema/tx
+      http://www.springframework.org/schema/tx/spring-tx.xsd
+      http://www.springframework.org/schema/aop
+      http://www.springframework.org/schema/aop/spring-aop.xsd">
+    	
+      <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" > 
+		<!-- 驱动  -->
+		<property name="driverClassName" value="oracle.jdbc.driver.OracleDriver" ></property>
+		<!-- url -->
+		<!-- <property name="url" value="jdbc:oracle:thin:@DESKTOP-ITQSFEN:1521:orcl"></property>
+		 --><property name="url" value="jdbc:oracle:thin:@PC-201706092236:1522:orcl"></property>
+		<!-- 用户名 -->
+		<property name="username" value="testAdmin"></property>
+		<!-- 密码 -->
+		<property name="password" value="123456"></property>
+	</bean>
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean" scope="prototype" autowire-candidate="default" >
+		<property name="dataSource" ref="dataSource"></property>
+		<property name="configLocation"  value="classpath:mybatis_config.xml"></property>
+	 </bean>
+      <context:component-scan base-package="com.yidu.*"></context:component-scan>
+     <!--  <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter"/>
+      -->
+        <aop:aspectj-autoproxy proxy-target-class="false"/>
+    <!-- 基于数据访问的接口产生代理实现类（dao） -->
+	<bean id="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.yidu.*.dao"></property>
+	</bean>	
+	<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/jsp/"></property>                  
+		<property name="suffix" value=".jsp"></property>
+	</bean>
+	<mvc:default-servlet-handler/>
+	<context:annotation-config/>
+     <mvc:annotation-driven>
+        <mvc:message-converters register-defaults="true">
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                <property name="supportedMediaTypes"> 
+                	 <list>  
+                       <bean class="org.springframework.http.MediaType">  
+                           <constructor-arg index="0" value="text" />  
+                           <constructor-arg index="1" value="html" />  
+                           <constructor-arg index="2" value="UTF-8" />  
+                       </bean>  
+                   </list> 
+                
+                </property>   
+                </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+    <!-- 开启事务管理 -->
+    <bean id="transctionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+    
+    <tx:annotation-driven  transaction-manager="transctionManager"  proxy-target-class="true"/>
+    <!-- 上传文件 -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+    	<property name="defaultEncoding"><value>utf-8</value></property>
+    	<property name="maxUploadSize"><value>104857600</value></property>
+    	<property name="maxInMemorySize"><value>4096</value></property>
+    </bean>
+ </beans>  

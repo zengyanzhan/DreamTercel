@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.reportManagement.dao.SeatDealDetailReportDao">
+	<!-- 席位成交明细统计表 -->
+	<resultMap type="com.yidu.reportManagement.domain.SeatDealDetailReport" id="seatDealDetailReportMap">
+		<id property="seatName" column="seat_name" />
+		<result property="securityCode" column="security_code" />
+		<result property="securityName" column="security_name" />
+		<result property="dealQuantity" column="quantity" />
+		<result property="dealTotalPrice" column="totalMoney" />
+		<result property="manageFee" column="manageFee" />
+		<result property="transferFee" column="transferFee" />
+		<result property="handleFee" column="commissionFee" />
+		<result property="brokerage" column="brokerageFee" />
+		<result property="exchangeCode" column="exchangeCode" />
+	</resultMap>
+	<select id="selectSeatDealDetailReport" parameterType="com.yidu.reportManagement.domain.ReportParams"
+		resultMap="seatDealDetailReportMap">
+		<!-- 席位名称 证券代码 证券名称 交易数量 交易金额 过户费 征管费 经手费 佣金 -->
+		select
+		ts.seat_name,se.security_code,se.security_name,sum(nvl(dd.deal_quantity,0))
+		quantity,sum(nvl(dd.deal_total_price,0)) totalMoney,
+		sum(nvl(dd.management_fee,0)) manageFee,sum(nvl(dd.transfer_fee,0))
+		transferFee,sum(nvl(dd.commission_fee,0)) commissionFee,
+		sum(nvl(dd.brokerage_fee,0)) brokerageFee,se.exchange_name
+		exchangeCode
+		from deal_data dd join trade_seat ts on
+		dd.trade_seat_code=ts.trade_seat_code
+		join security se on
+		dd.security_code=se.security_code
+		where dd.fund_code='${fundCode}' and
+		dd.deal_date between
+		to_date('${firstStrDate}','yyyy-mm-dd') and
+		to_date('${secondStrDate}','yyyy-mm-dd')
+		and
+		se.exchange_name='${exchangeCode}'
+		and se.security_type='${securityType}'
+		group by
+		ts.seat_name,se.security_code,se.security_name,se.exchange_name
+	</select>
+</mapper>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yidu.statement.dao.OffsetBalanceDao">
+	<resultMap type="com.yidu.statement.domain.OffsetBalance" id="offsetBalanceMap">
+		<result column="securityId" property="securityId" />
+		<result column="outMoney" property="outMoney" />
+		<result column="inMoney" property="inMoney" />
+		<result column="clearMoney" property="clearMoney" />
+		<result column="handleFee" property="handleFee" />
+		<result column="stamps" property="stamps" />
+		<result column="transferFee" property="transferFee" />
+		<result column="connectionAndManagementFees" property="connectionAndManagementFees" />
+		<result column="money" property="money" />
+	</resultMap>
+
+	<select id="selectOffsetBalance" parameterType="com.yidu.data.domain.TradeData"
+		resultMap="offsetBalanceMap">
+		select nvl(lr.securityId,lc.securityId)
+		securityId,nvl(lc.dealAllPrice,0) outMoney,nvl(lr.dealAllPrice,0)
+		inMoney,
+		(nvl(lr.dealAllPrice,0)-nvl(lc.dealAllPrice,0)) clearMoney,(nvl(lr.handleFee,0)+nvl(lc.handleFee,0)) handleFee,
+		(nvl(lr.stamps,0)+nvl(lc.stamps,0))
+		stamps,(nvl(lr.transferFee,0)+nvl(lc.transferFee,0)) transferFee,
+		(nvl(lr.connectionAndManagementFees,0)+nvl(lc.connectionAndManagementFees,0))
+		connectionAndManagementFees,
+		(nvl(lr.dealAllPrice,0)-nvl(lc.dealAllPrice,0)-(nvl(lr.handleFee,0)+nvl(lc.handleFee,0))-(nvl(lr.stamps,0)+nvl(lc.stamps,0))
+		-(nvl(lr.transferFee,0)+nvl(lc.transferFee,0))-(nvl(lr.connectionAndManagementFees,0)+nvl(lc.connectionAndManagementFees,0)))
+		money
+		from
+		(select fundId,securityId,sum(nvl(dealAllPrice,0))
+		dealAllPrice,sum(nvl(handleFee,0)) handleFee,
+		sum(nvl(stamps,0)) stamps,sum(nvl(transferFee,0)) transferFee,
+		sum(nvl(connectionAndManagementFees,0)) connectionAndManagementFees
+		from t_deal where dealFlag=1
+		and tradeDate=#{tradeDate} and fundId=#{fundId} group by
+		fundId,securityId) lr
+		full join
+		(select fundId,securityId,sum(nvl(dealAllPrice,0))
+		dealAllPrice,sum(nvl(handleFee,0)) handleFee,
+		sum(nvl(stamps,0)) stamps,sum(nvl(transferFee,0)) transferFee,
+		sum(nvl(connectionAndManagementFees,0)) connectionAndManagementFees
+		from t_deal where dealFlag=-1
+		and tradeDate=#{tradeDate} and fundId=#{fundId} group by
+		fundId,securityId) lc
+		on lr.fundId=lc.fundId and lr.securityId=lc.securityId
+	</select>
+</mapper>

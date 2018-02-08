@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.taManagement.dao.TaTradeSettleDao">
+	<select id="selectTaTradeSettle" statementType="CALLABLE"
+		parameterMap="selectTaTradeSettleMap">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<parameterMap type="map" id="selectTaTradeSettleMap">
+		<parameter property="tableName" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="qualification" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="page" jdbcType="INTEGER" mode="INOUT" />
+		<parameter property="rows" jdbcType="INTEGER" mode="INOUT" />
+		<parameter property="pageTotal" jdbcType="INTEGER" mode="OUT" />
+		<parameter property="rowsTotal" jdbcType="INTEGER" mode="OUT" />
+		<parameter property="orderColumn" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="orderStyle" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="TaTradeSettleList" jdbcType="CURSOR" mode="OUT"
+			resultMap="selectTaTradeSettleParameterMap" />
+	</parameterMap>
+
+	<resultMap type="TaTradeSettle" id="selectTaTradeSettleParameterMap">
+		<id column="ta_trad_data_code" property="taTradDataCode" />
+		<result column="fund_code" property="fundCode" />
+		<result column="ta_trad_quality" property="taTradQuality" />
+		<result column="cash_account_code" property="cashAccountCode" />
+		<result column="ta_total_money" property="taTotalMoney" />
+		<result column="ta_real_money" property="taRealMoney" />
+		<result column="ta_trade_date" property="taTradeDate" />
+		<result column="settle_date" property="settleDate" />
+		<result column="ta_unit_money" property="taUnitMoney" />
+		<result column="fee" property="fee" />
+		<result column="agencies" property="agencies" />
+		<result column="ta_rade_type" property="taRadeType" />
+		<result column="ta_trade_status" property="taTradeStatus" />
+		<result column="ta_trad_data_desc" property="taTradDataDesc" />
+	</resultMap>
+
+	<!-- 删除 -->
+	<!--  <delete id="deleteTaTradDataByTaTradDataId" parameterType="STRING">
+		delete from ta_trad_data where ta_trad_data_code=#{taTradDataCode}
+	</delete>-->
+	<!-- 修改的sql语句 -->
+	<!-- <update id="updateTaTradData" parameterType="TaTradData" >
+		update ta_trad_data
+		set
+		fund_code=#{fundCode},ta_trad_quality=#{taTradQuality},cash_account_code=#{cashAccountCode},
+		ta_total_money=#{taTotalMoney},ta_real_money=#{taRealMoney},ta_trade_date=#{taTradeDate},settle_date=#{settleDate},ta_unit_money=#{taUnitMoney},fee=#{fee},
+		agencies=#{agencies},ta_rade_type=#{taRadeType},ta_trade_status=#{taTradeStatus},ta_trad_data_desc=#{taTradDataDesc}
+		where ta_trad_data_code=#{taTradDataCode}
+	</update> -->
+	<!-- <insert id="insertTaTradData" parameterType="TaTradData">
+		insert into
+		ta_trad_data values(#{taTradDataCode},#{fundCode},#{taTradQuality},
+		#{cashAccountCode},#{taTotalMoney},#{taRealMoney},#{taTradeDate},#{settleDate},
+		#{taUnitMoney},#{fee},#{agencies},#{taRadeType},#{taTradeStatus},#{taTradDataDesc})
+	</insert> -->
+	<!--  <select id="selectTaTradDataById" parameterType="STRING" resultMap="selectTaTradDataParameterResultMap"> 
+		select * from ta_trad_data where ta_trad_data_code=#{taTradDataCode} 
+		</select> -->
+</mapper>

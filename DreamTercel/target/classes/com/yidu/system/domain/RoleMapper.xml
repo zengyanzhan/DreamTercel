@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace 指明SQL语句映射针对于实体对象 -->
+<mapper namespace="com.yidu.system.dao.RoleDao">
+	<resultMap type="Role" id="RoleMap">
+		<id property="roleCode" column="role_code" />
+		<result property="roleName" column="role_name" />
+		<result property="roleDepict" column="role_depict" />
+		<result property="roleFlag" column="role_flag" />
+		<result property="roleDesc" column="role_desc" />
+	</resultMap>
+	<parameterMap type="map" id="selectRoleINMap">
+		<parameter property="tableName" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="qualification" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="page" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="rows" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="pageTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="rowsTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="orderColumn" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="orderStyle" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="cursor" mode="OUT" jdbcType="CURSOR"
+			resultMap="RoleMap" />
+	</parameterMap>
+	<select id="selectRole" parameterMap="selectRoleINMap"
+		statementType="CALLABLE">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<!-- 增加的方法 -->
+	<insert id="insertRole" parameterType="Role">
+		insert into role values
+		(#{roleCode},#{roleName},#{roleDepict},#{roleFlag},#{roleDesc})
+	</insert>
+	<!-- 删除的方法 -->
+	<delete id="deleteRole" parameterType="Role">
+		delete from role where
+		role_Code in (${roleCode})
+	</delete>
+	<!-- 修改的方法 -->
+	<update id="updateRole" parameterType="Role">
+		update role set
+		role_Name=#{roleName},role_Depict=#{roleDepict},role_Flag=#{roleFlag}
+		where
+		role_Code=#{roleCode}
+	</update>
+	
+	<!-- 通过编号一条查询数据 -->
+	<select id="selectOneRoleByCode" parameterType="Role" resultMap="RoleMap">
+		select * from role where role_code =#{roleCode}
+	</select>
+	
+	
+
+</mapper>

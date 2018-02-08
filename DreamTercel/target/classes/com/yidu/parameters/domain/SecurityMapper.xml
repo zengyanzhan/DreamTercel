@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper	namespace="com.yidu.parameters.dao.SecurityDao">
+  	<!-- 查询的sql语句 -->
+  	<select id="selectSecuritys" statementType="CALLABLE" parameterMap="selectSecuritysMap">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<parameterMap type="map" id="selectSecuritysMap">
+		<parameter property="tableName"  jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="qualification" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="page" jdbcType="INTEGER" mode="INOUT"/>
+		<parameter property="rows" jdbcType="INTEGER" mode="INOUT"/>
+		<parameter property="pageTotal" jdbcType="INTEGER" mode="OUT"/>
+		<parameter property="rowsTotal" jdbcType="INTEGER"  mode="OUT"/>
+		<parameter property="orderColumn" jdbcType="VARCHAR"  mode="IN"/>
+		<parameter property="orderStyle" jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="securityList" jdbcType="CURSOR" mode="OUT" resultMap="selectSecuritysMap"/>
+	</parameterMap>
+	<resultMap type="Security" id="selectSecuritysMap">
+		<id column="security_code" property="securityCode"/>
+		<result column="security_name" property="securityName"/>
+		<result column="publish_date" property="publishDate"/>
+		<result column="delay_date" property="delayDate"/>
+		<result column="security_type" property="securityType"/>
+		<result column="exchange_name" property="exchangeName"/>
+		<result column="stock_plate_code" property="stockPlateCode"/>
+		<result column="security_desc" property="securityDesc"/>
+	</resultMap>
+    <!-- 增加的sql语句 -->
+    <insert id="insertSecurity" parameterType="Security">
+    	insert into security values(#{securityCode},#{securityName},#{publishDate},#{delayDate},#{securityType},#{exchangeName},#{stockPlateCode},#{securityDesc})
+    </insert>
+    <!-- 通过id删除的sql语句 -->
+    <delete id="deleteSecurityByIds" parameterType="STRING">
+    	delete from security where security_code in #{securityCode}
+    </delete>
+   <!-- 修改的sql语句 -->
+    <update id="updateSecurity" parameterType="com.yidu.parameters.domain.Security">
+    	update security set security_name=#{securityName},publish_date=#{publishDate},delay_date=#{delayDate},
+    	security_type=#{securityType},exchange_name=#{exchangeName},stock_plate_code=#{stockPlateCode},
+    	security_desc=#{securityDesc} where security_code=#{securityCode}
+    </update>
+    <!-- 通过id查询的sql语句 -->
+    <select id="selectSecurityByIds" parameterType="STRING" resultMap="selectSecuritysMap">
+    	select * from security where security_code=#{securityCode}
+    </select>
+  </mapper>

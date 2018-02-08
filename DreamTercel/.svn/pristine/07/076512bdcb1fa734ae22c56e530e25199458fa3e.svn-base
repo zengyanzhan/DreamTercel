@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.stockControl.dao.SecurityArapStockDao">
+	<!-- 查询的sql语句 -->
+	<select id="selectSecurityArapStock" statementType="CALLABLE" parameterMap="selectSecurityArapStockMap">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)    
+	</select>
+	<parameterMap type="map" id="selectSecurityArapStockMap">
+		<parameter property="tableName"  jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="qualification" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="page" jdbcType="INTEGER" mode="INOUT"/>
+		<parameter property="rows" jdbcType="INTEGER" mode="INOUT"/>
+		<parameter property="pageTotal" jdbcType="INTEGER" mode="OUT"/>
+		<parameter property="rowsTotal" jdbcType="INTEGER"  mode="OUT"/>
+		<parameter property="orderColumn" jdbcType="VARCHAR"  mode="IN"/>
+		<parameter property="orderStyle" jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="bondList" jdbcType="CURSOR" mode="OUT" resultMap="selectSecurityArapStockresultMap"/>
+	</parameterMap>
+	<resultMap type="SecurityArapStock" id="selectSecurityArapStockresultMap">
+		<id column="security_arap_stock_code" property="securityArapStockCode"/>
+		<result column="cash_account_code" property="cashAccountCode"/>
+		<result column="fund_code" property="fundCode"/>
+		<result column="security_code" property="securityCode"/>
+		<result column="business_type" property="businessType"/>
+		<result column="total_money" property="totalMoney"/>
+		<result column="period_flag" property="periodFlag"/>
+		<result column="business_status" property="businessStatus"/>
+		<result column="business_date" property="businessDate"/>
+		<result column="security_arap_stock_desc" property="securityArapStockDesc"/>
+	</resultMap>
+	<!-- 根据id删除的sql语句 -->
+	<delete id="deleteSecurityArapStockId" parameterType="STRING">
+		delete from security_arap_stock where security_arap_stock_code=#{securityArapStockCode}
+	</delete>
+	
+	<!-- 通过id查询的sql语句 -->
+	<select id="selectSecurityArapStockIds" resultMap="selectSecurityArapStockresultMap" parameterType="STRING">
+		select * from security_arap_stock where security_arap_stock_code=#{securityArapStockCode}  
+	</select>
+	<!-- 添加证券应收应付库存 -->
+	<insert id="insertSecurityArapStock" parameterType="SecurityArapStock">
+		insert into security_arap_stock values (#{securityArapStockCode},#{cashAccountCode},#{fundCode},#{securityCode},
+		#{businessType},#{totalMoney},#{periodFlag},#{businessStatus},#{businessDate}
+		,#{securityArapStockDesc})
+	</insert>
+	<!-- 修改证券应收应付库存 -->
+	<update id="updateSecurityArapStock" parameterType="SecurityArapStock">
+		update security_arap_stock set cash_account_code=#{cashAccountCode},
+		fund_code=#{fundCode},security_code=#{securityCode},business_type=#{businessType},
+		total_money=#{totalMoney},period_flag=#{periodFlag},business_status=#{businessStatus},
+		business_date=#{businessDate},security_arap_stock_desc=#{securityArapStockDesc}  where security_arap_stock_code=#{securityArapStockCode}
+	</update>
+</mapper>

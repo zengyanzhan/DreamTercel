@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.businessData.dao.SecurityArapDao">
+    <resultMap type="SecurityArap" id="ArapResultMap">
+		<result property="securityArapCode" column="security_arap_code"/>
+		<result property="cashAccountCode" column="cash_account_code"/>
+		<result property="fundCode" column="fund_code"/>
+		<result property="securityCode" column="security_code"/>
+		<result property="securityArapType" column="security_arap_type"/>
+		<result property="moneyDirection" column="money_direction"/>
+		<result property="money" column="money"/>
+		<result property="businessDate" column="business_date"/>
+		<result property="securityArapDesc" column="security_arap_desc"/>
+	</resultMap>
+	<parameterMap type="java.util.Map" id="selectSecurityArapInMap">
+		<parameter property="tabName" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="qualification" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="page" mode="INOUT" jdbcType="INTEGER"/>
+		<parameter property="rows" mode="INOUT" jdbcType="INTEGER"/>
+		<parameter property="pageTotal" mode="OUT" jdbcType="INTEGER"/>
+		<parameter property="rowsTotal" mode="OUT" jdbcType="INTEGER"/>
+		<parameter property="orderColumn" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="orderStyle" mode="IN" jdbcType="VARCHAR"/>
+		<parameter property="cursor" jdbcType="CURSOR" mode="OUT"
+			resultMap="ArapResultMap"/>
+	</parameterMap>
+	<select id="selectSecurityArap" parameterMap="selectSecurityArapInMap"
+		statementType="CALLABLE">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<insert id="insertSecurityArap" parameterType="SecurityArap">
+		insert into security_arap
+		values(#{securityArapCode},#{cashAccountCode},#{fundCode},#{securityCode},#{securityArapType},#{moneyDirection},#{money},#{businessDate},#{securityArapDesc})
+	</insert>
+	
+	<update id="updateSecurityArap" parameterType="SecurityArap">
+		update security_arap set
+		cash_account_code=#{cashAccountCode},fund_code=#{fundCode},security_code=#{securityCode},security_arap_type=#{securityArapType},money_direction=#{moneyDirection},money=#{money},business_date=#{businessDate},security_arap_desc=#{securityArapDesc} where security_arap_code=#{securityArapCode}
+	</update>
+	<delete id="deleteSecurityArap" parameterType="String">
+		delete from security_arap where security_arap_code in(${securityArapCode})
+	</delete>
+	
+	<select id="selectSecurityArapById" parameterType="String" resultType="SecurityArap">
+		select security_arap_code as securityArapCode,cash_account_code as cashAccountCode,fund_code as fundCode,security_code as securityCode,security_arap_type as securityArapType,money_direction as moneyDirection,money as money,business_date as businessDate,security_arap_desc as securityArapDesc from security_arap  where security_arap_code=#{securityArapCode}
+	</select>
+	<delete id="deleteSqlWhereSecurityArap" parameterType="string">
+		delete from security_arap where cash_account_code in('${cashAccountCode}') and business_date in(to_date('${businessDate}','YYYY-MM-DD')) and fund_code in('${fundCode}') and security_arap_type in('${securityArapType}')
+	</delete> 
+</mapper>      

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+  <!-- namespace 指明SQL语句映射针对于实体对象 -->
+  <mapper namespace="com.yidu.businessData.dao.PriceDateDao">
+      <parameterMap type="map" id="selectPriceDataInMap">
+      <parameter property="tableName" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="qualification" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="page" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="rows" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="pageTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="rowsTotal" mode="OUT" jdbcType="INTEGER" />
+		<parameter property="orderColumn" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="orderStyle" mode="IN" jdbcType="VARCHAR" />
+		<parameter property="cursor" mode="OUT" jdbcType="CURSOR"
+			resultMap="PriceDataMap" />
+		</parameterMap>
+		
+		<resultMap type="PriceData" id="PriceDataMap">
+		    <id property="priceDataCode" column="pd_priceDataCode" />
+		    <result property="securityCode" column="pd_securityCode" />
+		    <result property="enteringDate" column="pd_enteringDate" />
+		    <result property="openingPrice" column="pd_openingPrice" />
+		    <result property="closingPrice" column="pd_closingPrice" />
+		    <result property="Desc" column="pd_Desc" />
+		</resultMap>
+		<!-- 分页查询 -->
+	<select id="selectPriceData" parameterMap="selectPriceDataInMap"
+		statementType="CALLABLE">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<!-- 新增 -->
+	<insert id="insertPrice" parameterType="PriceData">
+	    insert into priceData values(#{priceDataCode},#{securityCode},#{enteringDate},#{openingPrice},#{closingPrice},#{Desc})
+	</insert>
+	
+	<!-- 修改 -->
+	<update id="updatePrice" parameterType="PriceData">
+	    update priceData set  pd_securityCode=#{securityCode},pd_enteringDate=#{enteringDate},
+	    pd_openingPrice=#{openingPrice},pd_closingPrice=#{closingPrice},pd_Desc=#{Desc} where pd_priceDataCode=#{priceDataCode}
+	</update>
+	
+	<!-- 删除 -->
+	<delete id="deletePrrice" parameterType="PriceData">
+	     delete from priceData where
+		pd_priceDataCode in (${priceDataCode})
+	</delete>
+	
+	<!-- 通过一条查询数据 -->
+	<select id="selectPriceDataByCode" parameterType="PriceData" resultMap="PriceDataMap">
+	    		select * from priceData where pd_priceDataCode = #{priceDataCode}
+	</select>
+	
+	<delete id="deletePriceByDate"  >
+	    
+	    delete from  priceData where pd_enteringDate = #{enteringDate} 
+	</delete>
+  </mapper>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace 指明SQL语句映射针对于实体对象 -->
+<mapper namespace="com.yidu.system.dao.HolidayDao">
+
+	<resultMap type="Holiday" id="holidayMap">
+		<id property="hCode" column="h_code" />
+		<result property="hDate" column="h_date" />
+	</resultMap>
+	<!-- 通过用户名查询父功能 -->
+	<select id="selectHolidayByDate" parameterType="string"
+		resultMap="holidayMap">
+		SELECT * FROM holiday where h_Date =to_date(#{0},'YYYY-MM-DD') 
+	</select>
+
+	
+</mapper>

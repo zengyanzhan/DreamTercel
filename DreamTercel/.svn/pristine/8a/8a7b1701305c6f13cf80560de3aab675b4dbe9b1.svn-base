@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.parameters.dao.BondDao">
+	<!-- 查询的sql语句 -->
+	<select id="selectBonds" statementType="CALLABLE" parameterMap="selectBondsMap">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)
+	</select>
+	<parameterMap type="map" id="selectBondsMap">
+		<parameter property="tableName"  jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="qualification" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="page" jdbcType="INTEGER" mode="INOUT"/>
+		<parameter property="rows" jdbcType="INTEGER" mode="INOUT"/>
+		<parameter property="pageTotal" jdbcType="INTEGER" mode="OUT"/>
+		<parameter property="rowsTotal" jdbcType="INTEGER"  mode="OUT"/>
+		<parameter property="orderColumn" jdbcType="VARCHAR"  mode="IN"/>
+		<parameter property="orderStyle" jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="bondList" jdbcType="CURSOR" mode="OUT" resultMap="selectBondsMap"/>
+	</parameterMap>
+	<resultMap type="Bond" id="selectBondsMap">
+		<id column="bond_code" property="bondCode"/>
+		<result column="bond_name" property="bondName"/>
+		<result column="interest_star_date" property="interestStarDate"/>
+		<result column="interest_end_date" property="interestEndDate"/>
+		<result column="bond_type" property="bondType"/>
+		<result column="coupon_rate" property="couponRate"/>
+		<result column="bond_interest" property="bondInterest"/>
+		<result column="coupon_money" property="couponMoney"/>
+		<result column="payment_count" property="paymentCount"/>
+		<result column="bond_desc" property="bondDesc"/>
+	</resultMap>
+	
+	<resultMap type="Security" id="selectSecuritysMap">
+		<id column="security_code" property="securityCode"/>
+		<result column="security_name" property="securityName"/>
+		<result column="publish_date" property="publishDate"/>
+		<result column="delay_date" property="delayDate"/>
+		<result column="security_type" property="securityType"/>
+		<result column="exchange_name" property="exchangeName"/>
+		<result column="stock_plate_code" property="stockPlateCode"/>
+		<result column="security_desc" property="securityDesc"/>
+	</resultMap>
+	<!-- 根据id删除的sql语句 -->
+	<delete id="deleteBondByBondIds" parameterType="STRING">
+		delete from bond where bond_code in #{bondCode}
+	</delete>
+	<!-- 增加的sql语句 -->
+	<insert id="insertBond" parameterType="Bond">
+		insert into bond values(#{bondCode},#{bondName},#{interestStarDate},#{interestEndDate},#{bondType},#{couponRate},#{bondInterest},#{couponMoney},#{paymentCount},#{bondDesc})
+	</insert>
+	<!-- 修改的sql语句 -->
+	<update id="updateBond" parameterType="com.yidu.parameters.domain.Bond">
+		update bond set bond_name=#{bondName},interest_star_date=#{interestStarDate},
+			interest_end_date=#{interestEndDate},bond_type=#{bondType},
+			coupon_rate=#{couponRate},bond_interest=#{bondInterest},
+			coupon_money=#{couponMoney},payment_count=#{paymentCount},
+			bond_desc=#{bondDesc} where bond_code=#{bondCode}
+	</update>
+	<!-- 通过id查询的sql语句 -->
+	<select id="selectBondByIds" resultMap="selectBondsMap" parameterType="STRING">
+		select * from bond where bond_code=#{bondCode}  
+	</select>
+	<!-- 通过证券类型查询出证券和债劵的id相同的id不显示sql语句 -->
+	<select id="selectSecurityTypes" resultMap="selectSecuritysMap" parameterType="INTEGER">
+		select * from security where security_code not in(
+			select security_code from security s,bond b where s.security_code=b.bond_code) and  security_type='2'
+	</select>
+	
+</mapper>

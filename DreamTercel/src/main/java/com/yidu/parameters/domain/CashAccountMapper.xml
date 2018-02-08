@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yidu.parameters.dao.CashAccountDao">
+	<!-- 查询的sql语句 -->
+	<select id="selectCashAccount" statementType="CALLABLE" parameterMap="selectCashAccountMap">
+		call pk_select.sp_select_pagination(?,?,?,?,?,?,?,?,?)    
+	</select>
+	<parameterMap type="map" id="selectCashAccountMap">
+		<parameter property="tableName"  jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="qualification" jdbcType="VARCHAR" mode="IN" />
+		<parameter property="page" jdbcType="INTEGER" mode="INOUT"/>
+		<parameter property="rows" jdbcType="INTEGER" mode="INOUT"/>
+		<parameter property="pageTotal" jdbcType="INTEGER" mode="OUT"/>
+		<parameter property="rowsTotal" jdbcType="INTEGER"  mode="OUT"/>
+		<parameter property="orderColumn" jdbcType="VARCHAR"  mode="IN"/>
+		<parameter property="orderStyle" jdbcType="VARCHAR" mode="IN"/>
+		<parameter property="bondList" jdbcType="CURSOR" mode="OUT" resultMap="selectCashAccountMap"/>
+	</parameterMap>
+	<resultMap type="CashAccount" id="selectCashAccountMap">
+		<id column="cash_account_code" property="cashAccountCode"/>
+		<result column="cash_account_bank_card" property="cashAccountBankCard"/>
+		<result column="cash_account_name" property="cashAccountName"/>
+		<result column="cash_account_bank_name" property="cashAccountBankName"/>
+		<result column="cash_account_deposit_type" property="cashAccountDepositType"/>
+		<result column="cash_account_card_rate" property="cashAccountCardRate"/>
+		<result column="cash_account_interest_period" property="cashAccountInterestPeriod"/>
+		<result column="cash_account_start_time" property="cashAccountStartTime"/>
+		<result column="cash_account_end_time" property="cashAccountEndTime"/>
+		<result column="cash_account_desc" property="cashAccountDesc"/>
+	</resultMap>
+	<!-- 通过id查询的sql语句 -->
+	<select id="selectCashAccountIds" resultMap="selectCashAccountMap" parameterType="STRING">
+		select * from cash_account where cash_account_code=#{cashAccountCode}  
+	</select>
+	<!-- 根据id删除的sql语句 -->
+	<delete id="deleteCashAccountId" parameterType="STRING">
+		delete from cash_account where cash_account_code=#{cashAccountCode}
+	</delete>
+	<!-- 添加的sql语句 -->
+	<insert id="insertCashaccount" parameterType="CashAccount">
+		insert into cash_account values (#{cashAccountCode},#{cashAccountBankCard},#{cashAccountName},#{cashAccountBankName},
+		#{cashAccountDepositType},#{cashAccountCardRate},#{cashAccountInterestPeriod},#{cashAccountStartTime},#{cashAccountEndTime}
+		,#{cashAccountDesc})
+	</insert>
+	<!-- 修改的sql语句 -->
+	<update id="updateCashAccount" parameterType="CashAccount">
+		update cash_account set cash_account_bank_card=#{cashAccountBankCard},cash_account_name=#{cashAccountName},
+		cash_account_bank_name=#{cashAccountBankName},cash_account_deposit_type=#{cashAccountDepositType},cash_account_card_rate=#{cashAccountCardRate},
+		cash_account_interest_period=#{cashAccountInterestPeriod},cash_account_start_time=#{cashAccountStartTime},cash_account_end_time=#{cashAccountEndTime},
+		cash_account_desc=#{cashAccountDesc} where cash_account_code=#{cashAccountCode}
+	</update>
+</mapper>

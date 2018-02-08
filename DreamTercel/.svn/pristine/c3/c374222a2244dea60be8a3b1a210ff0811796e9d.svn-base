@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace 指明SQL语句映射针对于实体对象 该对象是库存管理的证券库存dao接口类 -->
+<mapper namespace="com.yidu.dayEnd.dao.CashPayDao">
+	<resultMap type="CashPay" id="cashPayResultMap">
+		<!-- property 实体类属性名 column 表的字段名 -->
+		<result property="cashAccountCode" column="cash_account_code" />
+		<result property="businessType" column="business_type" />
+		<result property="fundCode" column="fund_code" />
+		<result property="accountName" column="cash_account_name" />
+		<result property="cardNum" column="cash_account_bank_card" />
+		<result property="moneyDirection" column="status" />
+		<result property="money" column="total_money" />
+		<result property="businessDate" column="business_date" />
+		<result property="desc" column="desc" />
+	</resultMap>
+	<!-- 查询现金应收应付库存 -->
+	<select id="selectCashPay" parameterType="map" resultMap="cashPayResultMap">
+		select * from cash_arap_stock ca join cash_account c on
+		ca.cash_account_code=c.cash_account_code join fund f on
+		ca.fund_code=f.fund_code
+		where ca.business_type=3
+		<if test="businessDate!=null">
+			and ca.business_date=#{businessDate}
+		</if>
+		<if test="fundCode!=null">
+			and f.fund_code=#{fundCode}
+		</if>
+	</select>
+	<!-- 查询现金应收应付库存数量-->
+	<select id="selectnCashPayCount" parameterType="CashPay"
+		resultType="Integer">
+		select count(*) from(
+		select * from cash_arap_stock where
+		business_date=#{businessDate}
+		and business_type=3 and
+		fund_code=#{fundCode}) ca join cash_account c on
+		ca.cash_account_code=c.cash_account_code join fund f on
+		ca.fund_code=f.fund_code
+		where ca.business_type=3
+
+	</select>
+	<!-- 查询两费 -->
+	<select id="selectTwoMoney" parameterType="map" resultMap="cashPayResultMap">
+	select * from cash_arap_stock  ca join  cash_account  c on  ca.cash_account_code=c.cash_account_code
+     join fund f on f.fund_code=ca.fund_code where (ca.business_type=2 or  ca.business_type=1)
+		<if test="businessDate!=null">
+			and ca.business_date=#{businessDate}
+		</if>
+		<if test="fundCode!=null">
+			and f.fund_code=#{fundCode}
+		</if>
+	</select>
+	
+	<!-- 查询两费数量 -->
+	<select id="selectTwoMoneyCount" parameterType="CashPay"
+		resultType="Integer">
+		select count(*) from(
+		select * from cash_arap_stock where
+		business_date=#{businessDate}
+		and (business_type=1 or business_type=2) and
+		fund_code=#{fundCode}) ca join cash_account c on
+		ca.cash_account_code=c.cash_account_code join fund f on
+		ca.fund_code=f.fund_code
+		where ca.business_type=1 or business_type=2 
+
+	</select>
+	<!-- 查询唯一的现金应收应付编号 -->
+	<select id="selectCashArapCode" parameterType="CashPay" resultType="String">
+	 select cash_arap_code from cash_arap where  cash_account_code=#{cashAccountCode}
+      and  business_date=#{businessDate} and fund_code=#{fundCode}
+      and money_direction=-1 and CASH_ARAP_TYPE=3
+	</select>
+	<!-- 查询唯一的两费编号 -->
+	<select id="selectTwoMoneyCode" parameterType="CashPay" resultType="String">
+		 select cash_arap_code from cash_arap where  cash_account_code=#{cashAccountCode}
+      and  business_date=#{businessDate} and fund_code=#{fundCode}
+      and money_direction=1 and CASH_ARAP_TYPE=#{businessType}
+      </select>
+	<!-- 删除现金应收应付 -->
+	<delete id="deleteCashAraps" parameterType="CashArap">
+	delete from cash_arap   where cash_arap_code=#{cashArapCode}
+	</delete>
+	
+	<delete id="deleteMoneys" parameterType="MoneyAllot">
+	delete from fund_allot
+		where business_code=#{businessCode} 
+	</delete>
+</mapper>

@@ -1,0 +1,290 @@
+package com.yidu.transactionProcessing.controller;
+
+import java.io.PrintWriter;
+import java.sql.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.google.gson.Gson;
+import com.yidu.parameters.domain.Fund;
+import com.yidu.system.domain.HoildayXiao;
+import com.yidu.system.service.HoildayXiaoSerice;
+import com.yidu.transactionProcessing.domain.DealData;
+import com.yidu.transactionProcessing.domain.Interests;
+import com.yidu.transactionProcessing.service.DealDataService;
+import com.yidu.transactionProcessing.service.InterestsService;
+import com.yidu.util.AllUtil;
+import com.yidu.util.service.AutoBianService;
+
+/**
+ * 权益处理的控制器
+ * @author XiaoYuJie
+ * @date 2017年11月16日
+ * @time 下午4:10:59
+ */
+@Controller
+public class InterestsController {
+	/**
+	 * 分页条件查询
+	 * @param request 请求对象
+	 * @param response 响应对象
+	 * @param equityData 实体类
+	 * @return
+	 * @throws Exception 抛出异常
+	 */
+	@Autowired
+	InterestsService interestsService;
+	@Autowired
+	DealDataService dealDataService;
+	@Autowired
+	AutoBianService autoBianHao;
+	@Autowired
+	HoildayXiaoSerice hoildayXiaoSerice;
+	@ResponseBody
+	@RequestMapping(value="/selectInterests.action",produces="text/html;charset=UTF-8")
+	public String selectInterests(HttpServletRequest request,HttpServletResponse response,@ModelAttribute("springWeb")Interests interests) throws Exception {
+		System.out.println("查询未处理");
+		//设置字符类型
+		request.setCharacterEncoding("UTF-8");
+		response.setCharacterEncoding("UTF-8");
+		System.err.println("interests"+interests);
+		//得到登录的基金id
+		HttpSession session=request.getSession();
+		Fund fund=(Fund) session.getAttribute("fund");
+		interests.setFundCode(fund.getFundCode());
+		//得到查询条件
+		String sqlWhere=interestsService.buffwhere(interests);
+		Map<String,Object> selectMap=interestsService.selectInterests(interests.getTableName(),sqlWhere,interests.getPage(), interests.getRows(), interests.getRowsTotal(), interests.getOrderColumn(), interests.getOrderStyle());
+		List<Interests>interestsDataList=(List<Interests>) selectMap.get("cursor");
+		//加强for循环 将查出来的date型转为String型在界面上显示出来
+		for(Interests interestss:interestsDataList){
+			try {
+				interestss.setStrDate(AllUtil.getStringDate(interestss.getExRights()));
+				//将出来的数据进行分红送股处理
+				Double num;
+				if(interestss.getEquityType()==1){
+					num=interestss.getTotalmoney()*interestss.getStockDistribution();
+				}else{
+					num=interestss.getStockDistribution()*interestss.getSecurityquantity();
+				}
+				interestss.setSendstockQuantity(num);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}	 
+		Map listMap=new HashMap();
+		listMap.put("total", selectMap.get("rowsTotal"));
+		listMap.put("rows", interestsDataList);
+		System.out.println("listMap"+listMap);
+		Gson gson=new Gson();
+		return gson.toJson(listMap);
+	}
+	/**
+	 * 已处理
+	 * @param request 得到请求
+	 * @param response 响应请求
+	 * @param interests 实体对象
+	 * @throws Exception 抛出异常
+	 */
+	@ResponseBody
+	@RequestMapping(value="/selectInterestsYi.action",produces="text/html;charset=UTF-8")
+	public String selectInterestsYi(HttpServletRequest request,HttpServletResponse response,@ModelAttribute("springWeb")Interests interests) throws Exception {
+		System.out.println("查询已处理");
+		request.setCharacterEncoding("UTF-8");
+		response.setCharacterEncoding("UTF-8");
+		System.err.println("interests"+interests);
+		//得到登录基金id
+		HttpSession session=request.getSession();
+		Fund fund=(Fund) session.getAttribute("fund");
+		//通过基金id查询
+		interests.setFundCode(fund.getFundCode());
+		String sqlWhere=interestsService.buffwhere(interests);
+		//调用分页查询的方法
+		Map selectMap=interestsService.selectInterestsYi(interests.getTableName(),sqlWhere,interests.getPage(), interests.getRows(), interests.getRowsTotal(), interests.getOrderColumn(), interests.getOrderStyle());
+		//得到返回的数据
+		List<Interests>interestsDataList=(List<Interests>) selectMap.get("cursor");
+		//加强for循环 将查出来的date型转为String型在界面上显示出来
+		for(Interests interestss:interestsDataList){
+			try {
+				interestss.setStrDate(AllUtil.getStringDate(interestss.getExRights()));
+				//将出来的数据进行分红送股处理
+				Double num;
+				if(interestss.getEquityType()==1){
+					num=interestss.getTotalmoney()*interestss.getStockDistribution();
+				}else{
+					num=interestss.getStockDistribution()*interestss.getSecurityquantity();
+				}
+				interestss.setSendstockQuantity(num);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		//得到总行数
+		int size=(int) selectMap.get("rowsTotal");
+		Map listMap=new HashMap();
+		listMap.put("total", size);
+		listMap.put("rows", interestsDataList);
+		System.out.println("listMap"+listMap);
+		//将数据包装成gson返回界面
+		Gson gson=new Gson();
+		String castlist=gson.toJson(listMap);
+		return castlist;
+	}
+
+	/**
+	 * 处理
+	 * @param request 得到请求
+	 * @param response 响应请求
+	 * @param interests 实体对象
+	 * @throws Exception 抛出异常
+	 */
+	@ResponseBody
+	@RequestMapping(value="/updateInterests.action",produces="text/html;charset=UTF-8")
+	public String updateInterests(HttpServletRequest request,HttpServletResponse response,@ModelAttribute("springWeb")Interests interests) throws Exception {
+		System.out.println("处理");
+		//设置字符编码
+		request.setCharacterEncoding("UTF-8");
+		response.setCharacterEncoding("UTF-8");
+		String flag="";
+		//得到权益数据id
+		String strEqDataCode=interests.getEqDataCode();
+		//得到界面传的日期
+		String strDate=interests.getStrDate();
+		//切割得到编号数组
+		String [] DealDataCodeArr=strEqDataCode.split(",");
+		for (int i = 0; i < DealDataCodeArr.length; i++) {
+			//通过实体找到数据
+			List<Interests> list=interestsService.selectInterestsEqDataCode(DealDataCodeArr[i]);
+			String tip="处理";
+			//循环权益处理数据
+			for (int j = 0; j < list.size(); j++) {
+				//自动生成交易编号
+				String seatCode=autoBianHao.getAutoBianhao("deal_data", "JYSJ", "deal_data_code", "deal_date", new Date(System.currentTimeMillis()));
+				Interests interestss=list.get(j);
+				DealData dealData=new DealData();
+				Integer dealType;
+				if(interestss.getEquityType()==1){
+					dealType=3;
+				}else{
+					dealType=4;
+				}
+				dealData.setDealDataCode(seatCode);//交易单子号
+				dealData.setFundCode(interestss.getFundCode());//基金代码（外键）	null
+				dealData.setSecurityCode(interestss.getSecurityCode());//证券表的Code（外键）
+				dealData.setStrDealDate(strDate);//成交日期等于当天日期
+				//根据成交日期来得到结算日期
+				List<HoildayXiao> hoildayXiaoList=null;
+				String strDealDate=dealData.getStrDealDate();
+				do {
+					strDealDate=AllUtil.getStringDate(AllUtil.getDate(strDealDate, 1));
+					hoildayXiaoList=hoildayXiaoSerice.selectHoildayBydate(strDealDate);
+				} while (hoildayXiaoList.size()!=0);
+				dealData.setStrSetAccountDate(strDealDate);//
+				dealData.setUserCode("");//投资经理
+				dealData.setBrokerCode("");//券商Code
+				dealData.setTradeSeatCode("");//交易席位Code
+				dealData.setDealType(dealType);//交易方式	1买入、2卖出，3分红，4送股
+				dealData.setDealFlag(-1);//交易标识
+				dealData.setCashAccountCode(interestss.getAccountCode());///账户Code号
+				dealData.setDealPrice(interestss.getSecurityCost());//交易价格(单价)
+				dealData.setDealQuantity(interestss.getSecurityquantity());//交易数量	default
+				dealData.setDealTotalPrice(interestss.getTotalmoney());//交易金额（总的
+				dealData.setStampDuty(0d);//印花税	
+				dealData.setManagementFee(0d);//征管费
+				dealData.setTransferFee(0d);//过户费
+				dealData.setCommissionFee(0d);//佣金费用（券商
+				dealData.setBrokerageFee(0d);//经手费（交易所）
+				dealData.setRealCollectFee(0d);//实收金额 	总交易金额+总费用
+				dealData.setSecurityFnterest(0d);//证券利息	
+				dealData.setDealStatus(2);
+				dealData.setDealDataDesc("");
+				int a=interestsService.updateInterests(interests.getEqDataCode(), tip);//修改交易状态
+				//修改成功就添加到交易数据里面去
+				if(a>0){
+					dealDataService.insertDealData(dealData);
+					flag="处理成功";
+				}else{
+					flag="处理失败";
+				}
+
+			}
+		}
+		return flag;
+	}
+
+	/**
+	 * 反处理
+	 * @param request 得到请求
+	 * @param response 响应请求
+	 * @param interests 实体对象
+	 * @throws Exception 抛出异常
+	 */
+	@ResponseBody
+	@RequestMapping(value="/updateInterestsYi.action",produces="text/html;charset=UTF-8")
+	public String updateInterestsYi(HttpServletRequest request,HttpServletResponse response,@ModelAttribute("springWeb")Interests interests) throws Exception {
+		System.out.println("反处理");
+		request.setCharacterEncoding("UTF-8");
+		response.setCharacterEncoding("UTF-8");
+		String flag="";
+		//得到权益数据id
+		String strEqDataCode=interests.getEqDataCode();
+		//得到界面传的日期
+		String strDate=interests.getStrDate();
+		//切割得到编号数组
+		String [] DealDataCodeArr=strEqDataCode.split(",");
+		for (int i = 0; i < DealDataCodeArr.length; i++) {
+			//通过实体找到数据
+			List<Interests> lists=interestsService.selectInterestsEqDataCode(DealDataCodeArr[i]);
+			String tip="未处理";
+			//for循环得到的权益处理集合
+			for (int b = 0; b < lists.size(); b++) {
+				Interests interestss=lists.get(b);
+				interestss.setStrDate(strDate);
+				//通过权益处理实体查找交易数据
+				List<DealData> list=dealDataService.selectDealDataCode(interestss);
+				if(list!=null && !list.equals("")){
+					int j=0;
+					int a=0;
+					//循环得到的交易数据集合
+					for(DealData dealData:list){
+						System.err.println("1111");
+						System.err.println("dealData"+dealData);
+						dealData.setDealDataCode("'"+dealData.getDealDataCode()+"'");
+						//删除交易数据
+						j=dealDataService.deleteDealData(dealData);
+						//删除成功进行权益处理状态改变
+						if(j>0){
+							//改变权益处理状态
+							a=interestsService.updateInterestsYi(interests.getEqDataCode(), tip);
+							System.out.println("反list"+list);		
+							if(a>0){
+								flag= "反处理成功";
+							}else{
+								flag= "反处理失败";
+							}
+						}else{
+							flag= "反处理失败";
+
+						}
+					}
+				}else{
+					flag= "不是当天的数据不可以进行反处理";
+				}			
+			}
+		}
+		return flag;
+	}
+}

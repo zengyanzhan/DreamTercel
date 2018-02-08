@@ -1,0 +1,162 @@
+package com.yidu.parameters.controller;
+/**
+ * 现金账号表 控制器
+ * @author 肖向恩
+ *	
+ */
+import java.io.IOException;
+import java.sql.Date;
+
+import java.util.HashMap;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.google.gson.Gson;
+import com.yidu.parameters.dao.CashAccountDao;
+import com.yidu.parameters.domain.Bond;
+import com.yidu.parameters.domain.CashAccount;
+import com.yidu.parameters.domain.Fund;
+import com.yidu.parameters.service.CashAccountService;
+import com.yidu.util.AllUtil;
+import com.yidu.util.service.AutoBianService;
+@Controller
+public class CashAccountController {
+	//创建编号的处理类 autoBianService
+	@Autowired
+	AutoBianService autoBianService;
+	//创建gson
+	Gson gson=new Gson();
+	//现金账号的service
+	@Autowired
+	CashAccountService cashAccountService;
+	@ResponseBody
+	@RequestMapping(value="/selectCashAccount.action",produces="text/html;charset=UTF-8")
+	public String selectCashAccount(HttpServletResponse response,HttpServletRequest request,@ModelAttribute("SpringWeb")CashAccount cashAccount) throws Exception{
+		//用map调用查询的方法
+		HashMap<String,Object> map=cashAccountService.selectCashAccount(cashAccount);
+		//创建一个jsonMap
+		HashMap<String,Object> jsonMap=new HashMap<String,Object>();
+		//创建list用map得到bondList
+		List<CashAccount> list=(List) map.get("bondList");
+		for (CashAccount cashAccounts:list) {
+			//转开户时间
+			String strStart=AllUtil.getStringDate(cashAccounts.getCashAccountStartTime());
+			//转结束时间
+			String strEnd=AllUtil.getStringDate(cashAccounts.getCashAccountEndTime());
+			cashAccounts.setStrStart(strStart);
+			cashAccounts.setStrEnd(strEnd);
+		}
+		//得到行数
+		 Integer rows= (Integer) map.get("rowsTotal");
+		//System.err.println(map.get("bondList"));
+		jsonMap.put("total",rows);
+		jsonMap.put("rows",list);
+		System.out.println("jsonMap="+gson.toJson(jsonMap));
+		return gson.toJson(jsonMap);
+	}
+	/**
+	 *  控制器删除的方法
+	 * @param response
+	 * @param request
+	 * @param cashAccount
+	 * @return
+	 * @throws IOException
+	 */
+	@ResponseBody
+	@RequestMapping(value="/deleteCashAccountId.action",produces="text/html;charset=UTF-8")
+	public String deleteCashAccountId(HttpServletResponse response,HttpServletRequest request,@ModelAttribute("SpringWeb")CashAccount cashAccount) throws IOException{
+		//调用删除的方法
+		int i=cashAccountService.deleteCashAccountId(cashAccount.getCashAccountCode());
+		if (i>0) {
+			return "1";
+		}else{
+			return "0";
+		}
+		
+	}
+	/**
+	 * 控制器添加的方法
+	 * @param response
+	 * @param request
+	 * @param cashAccount
+	 * @return
+	 * @throws Exception
+	 */
+	@ResponseBody
+	@RequestMapping(value="/insertCashAccount.action",produces="text/html;charset=UTF-8")
+	public String insertCashAccount(HttpServletResponse response,HttpServletRequest request,@ModelAttribute("SpringWeb")CashAccount cashAccount)throws Exception{
+		//时间日期转换
+		Date cashAccountStartTime=AllUtil.getDate(cashAccount.getStrStart());
+		//时间日期转换
+		Date cashAccountEndTime=AllUtil.getDate(cashAccount.getStrStart());
+		cashAccount.setCashAccountStartTime(cashAccountStartTime);
+		cashAccount.setCashAccountEndTime(cashAccountEndTime);
+		int flag=cashAccountService.insertCashAccount(cashAccount);
+		if(flag!=0){
+			return "增加成功";
+		}else{
+			return "增加失败";
+		}
+	}
+	/**
+	 *  控制器修改的方法
+	 * @param response
+	 * @param request
+	 * @param cashAccount
+	 * @throws Exception
+	 */
+	@ResponseBody
+	@RequestMapping(value="/updateCashAccount.action",produces="text/html;charset=UTF-8")
+	public String updateCashAccount(HttpServletResponse response,HttpServletRequest request,@ModelAttribute("SpringWeb")CashAccount cashAccount)throws Exception{
+		//时间日期转换
+		Date cashAccountStartTime=AllUtil.getDate(cashAccount.getStrStart());
+		//时间日期转换
+		Date cashAccountEndTime=AllUtil.getDate(cashAccount.getStrEnd());
+		cashAccount.setCashAccountStartTime(cashAccountStartTime);
+		cashAccount.setCashAccountEndTime(cashAccountEndTime);
+		int updateCashAccount=cashAccountService.updateCashAccount(cashAccount);
+		if(updateCashAccount!=0){
+			return "修改成功";
+		}else{
+			return "修改失败";
+		}
+	  }
+	/**
+	 * 控制器通过id查询现金账户方法 
+	 * @param response	响应对象
+	 * @param request	请求对象
+	 * @param CashAccount	现金账户对象
+	 * @throws Exception	抛出异常
+	 */
+	@ResponseBody
+	@RequestMapping(value="selectCashAccountIds.action")
+	public String selectCashAccountId(HttpServletResponse response,HttpServletRequest request,@ModelAttribute("SpringWeb")CashAccount cashAccount)throws Exception{
+		//调用现金账户ID查询
+ 		cashAccount=cashAccountService.selectCashAccountIds(cashAccount.getCashAccountCode());
+		System.err.println("====="+gson.toJson(cashAccount));
+		cashAccount.setStrStart(AllUtil.getStringDate(cashAccount.getCashAccountStartTime()));
+		cashAccount.setStrEnd(AllUtil.getStringDate(cashAccount.getCashAccountEndTime()));
+		return gson.toJson(cashAccount);
+		
+	}
+	/**
+	 * 控制器调用自动生成编号方法
+	 * @return cash_account 表名 cash_account 生成编号前缀
+	 */
+	@ResponseBody
+	@RequestMapping(value="/autoCashAccountBianhao",produces="text/html;charset=UTF-8")
+	public String autoCashArapBianhao() throws Exception{
+
+		return autoBianService.getAutoBianhao("cash_account", "XJZH", "cash_account_code", "cash_account_start_time", null);
+	}
+
+	}
